@@ -6,38 +6,38 @@
 <title>Constructing Strong Pseudoprimes — Julio de Mello Bezerra</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
 <style>
 :root{
-  --ground:#ECEEF0; --surface:#FAFBFC; --sunk:#E2E6EA;
-  --ink:#161A1F; --ink-mid:#3C4651; --ink-dim:#657280; --ink-faint:#8D98A4;
-  --rule:#CDD4DB; --rule-soft:#DFE4E9;
-  --fixed:#3D5A80; --fixed-soft:#DCE4EF;
-  --moves:#B5316B; --moves-soft:#F4DDE7;
-  --proj:#6E7E85; --proj-soft:#E5EAEB;
-  --shadow:rgba(22,26,31,.09);
+  --ground:#FAFAFA; --surface:#FFFFFF; --sunk:#F5F5F5;
+  --ink:#171717; --ink-mid:#404040; --ink-dim:#737373; --ink-faint:#A3A3A3;
+  --rule:#E5E5E5; --rule-soft:#F0F0F0;
+  --fixed:#525252; --fixed-soft:#F5F5F5;
+  --moves:#2563EB; --moves-soft:#EFF6FF;
+  --proj:#A3A3A3; --proj-soft:#F5F5F5;
+  --shadow:rgba(23,23,23,.05);
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --ground:#13171B; --surface:#1A1F25; --sunk:#0E1216;
-    --ink:#E8ECF0; --ink-mid:#BAC4CE; --ink-dim:#8A95A1; --ink-faint:#646F7B;
-    --rule:#2C343C; --rule-soft:#232A31;
-    --fixed:#8FB0DC; --fixed-soft:#1E2A3A;
-    --moves:#E8799F; --moves-soft:#351E29;
-    --proj:#94A8B3; --proj-soft:#1F282D;
+    --ground:#0A0A0A; --surface:#121212; --sunk:#171717;
+    --ink:#F5F5F5; --ink-mid:#D4D4D4; --ink-dim:#A3A3A3; --ink-faint:#737373;
+    --rule:#262626; --rule-soft:#1C1C1C;
+    --fixed:#A3A3A3; --fixed-soft:#1F1F1F;
+    --moves:#60A5FA; --moves-soft:#172554;
+    --proj:#525252; --proj-soft:#171717;
     --shadow:rgba(0,0,0,.4);
   }
 }
 :root[data-theme="dark"]{
-  --ground:#13171B; --surface:#1A1F25; --sunk:#0E1216;
-  --ink:#E8ECF0; --ink-mid:#BAC4CE; --ink-dim:#8A95A1; --ink-faint:#646F7B;
-  --rule:#2C343C; --rule-soft:#232A31;
-  --fixed:#8FB0DC; --fixed-soft:#1E2A3A;
-  --moves:#E8799F; --moves-soft:#351E29;
-  --proj:#94A8B3; --proj-soft:#1F282D;
+  --ground:#0A0A0A; --surface:#121212; --sunk:#171717;
+  --ink:#F5F5F5; --ink-mid:#D4D4D4; --ink-dim:#A3A3A3; --ink-faint:#737373;
+  --rule:#262626; --rule-soft:#1C1C1C;
+  --fixed:#A3A3A3; --fixed-soft:#1F1F1F;
+  --moves:#60A5FA; --moves-soft:#172554;
+  --proj:#525252; --proj-soft:#171717;
   --shadow:rgba(0,0,0,.4);
 }
 
@@ -45,100 +45,101 @@
 html{scroll-behavior:smooth}
 body{
   background:var(--ground); color:var(--ink);
-  font-family:"Spectral",Georgia,"Times New Roman",serif;
-  font-size:17px; line-height:1.62;
-  margin:0; padding-inline:20px; padding-block:0;
+  font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:15px; line-height:1.68;
+  margin:0; padding-inline:24px; padding-block:0;
   -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
-.wrap{max-width:1120px;margin:0 auto}
-.col{max-width:67ch;margin-inline:auto}
-h1,h2,h3,.ui{font-family:"Archivo",system-ui,-apple-system,sans-serif}
-.mono,code,.num{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:896px;margin:0 auto}
+.col{max-width:68ch;margin-inline:auto}
+h1,h2,h3,.ui{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif}
+.mono,code,.num{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
 sup,sub{font-size:.72em;line-height:0}
 
 /* ---------- math & citations ---------- */
 .math-display{margin:22px 0;padding:10px 14px;overflow-x:auto;text-align:center;color:var(--ink)}
 a.cite-ref{
-  font-family:"IBM Plex Mono",monospace;font-size:.76em;color:var(--moves);
+  font-family:"JetBrains Mono",monospace;font-size:.76em;color:var(--moves);
   text-decoration:none;margin-left:2px;vertical-align:super;line-height:0;font-weight:500;
 }
 a.cite-ref:hover{text-decoration:underline}
 
 /* ---------- masthead ---------- */
-header{padding-block:68px 40px;border-bottom:1px solid var(--rule)}
-.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);margin:0 0 22px}
+header{padding-block:56px 36px;border-bottom:1px solid var(--rule)}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);margin:0 0 18px}
 h1{
-  font-size:clamp(1.85rem,5vw,3.25rem); font-weight:800; line-height:1.02;
-  letter-spacing:-.03em; margin:0; text-wrap:balance; hyphens:manual;
+  font-size:clamp(1.75rem,4vw,2.5rem); font-weight:600; line-height:1.15;
+  letter-spacing:-.025em; margin:0; text-wrap:balance; hyphens:manual; color:var(--ink);
 }
-.standfirst{font-size:1.22rem;line-height:1.5;color:var(--ink-mid);max-width:58ch;margin:26px 0 0}
+.standfirst{font-size:1.05rem;line-height:1.6;color:var(--ink-mid);max-width:62ch;margin:20px 0 0}
 .standfirst b{font-weight:600;color:var(--ink)}
-.author-byline{font-family:"IBM Plex Mono",monospace;font-size:.88rem;letter-spacing:.04em;color:var(--ink-dim);margin:20px 0 0}
-.author-byline .who{color:var(--moves);font-weight:600}
+.author-byline{font-family:"JetBrains Mono",monospace;font-size:.82rem;letter-spacing:.02em;color:var(--ink-dim);margin:18px 0 0}
+.author-byline .who{color:var(--ink);font-weight:500}
 
 /* ---------- prose ---------- */
-section{padding-block:52px;border-bottom:1px solid var(--rule-soft)}
+section{padding-block:48px;border-bottom:1px solid var(--rule-soft)}
 section:last-of-type{border-bottom:0}
-h2{font-size:1.7rem;font-weight:700;letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
-h2 .idx{font-family:"IBM Plex Mono",monospace;font-size:.72rem;font-weight:500;color:var(--moves);letter-spacing:.1em;display:block;margin-bottom:10px;text-transform:uppercase}
-h3{font-size:1.06rem;font-weight:600;letter-spacing:-.005em;margin:34px 0 8px}
-p{margin:0 0 16px}
+h2{font-size:1.35rem;font-weight:600;letter-spacing:-.02em;margin:0 0 12px;text-wrap:balance;color:var(--ink)}
+h2 .idx{font-family:"JetBrains Mono",monospace;font-size:.72rem;font-weight:500;color:var(--ink-dim);letter-spacing:.08em;display:block;margin-bottom:8px;text-transform:uppercase}
+h3{font-size:1.02rem;font-weight:600;letter-spacing:-.01em;margin:32px 0 10px;color:var(--ink)}
+p{margin:0 0 16px;color:var(--ink-mid)}
 .col>p:last-child{margin-bottom:0}
-code{font-size:.88em;background:var(--sunk);padding:.1em .34em;border-radius:3px;color:var(--ink-mid)}
+code{font-size:.86em;background:var(--sunk);padding:.12em .36em;border-radius:4px;color:var(--ink);border:1px solid var(--rule-soft)}
 em{font-style:italic}
-strong{font-weight:600}
-.lede{font-size:1.1rem;color:var(--ink-mid)}
-ul{margin:0 0 16px;padding-left:1.15em}
+strong{font-weight:600;color:var(--ink)}
+.lede{font-size:1.05rem;color:var(--ink-mid)}
+ul{margin:0 0 16px;padding-left:1.2em;color:var(--ink-mid)}
 li{margin-bottom:7px}
 .aside{
   border:1px solid var(--rule); background:var(--surface); padding:16px 20px; margin:26px 0;
-  color:var(--ink-mid); font-size:.95rem;
+  color:var(--ink-mid); font-size:.92rem; border-radius:6px;
 }
 .aside b{color:var(--ink);font-weight:600}
 
 /* ---------- collapsible code disclosures ---------- */
 details.code-fold{
-  margin:22px 0; border:1px solid var(--rule); background:var(--surface);
+  margin:22px 0; border:1px solid var(--rule); background:var(--surface); border-radius:6px; overflow:hidden;
 }
 details.code-fold summary{
-  font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.04em;
+  font-family:"JetBrains Mono",monospace; font-size:11.5px; letter-spacing:.02em;
   color:var(--ink-mid); padding:10px 16px; cursor:pointer; user-select:none;
   display:flex; justify-content:space-between; align-items:center;
 }
 details.code-fold summary:hover{background:var(--sunk);color:var(--ink)}
-details.code-fold[open] summary{border-bottom:1px solid var(--rule);color:var(--moves)}
+details.code-fold[open] summary{border-bottom:1px solid var(--rule);color:var(--ink)}
 details.code-fold pre{
   margin:0; padding:16px; overflow-x:auto; background:var(--sunk);
-  font-family:"IBM Plex Mono",monospace; font-size:12.5px; line-height:1.58; color:var(--ink);
+  font-family:"JetBrains Mono",monospace; font-size:12.5px; line-height:1.58; color:var(--ink);
 }
-details.code-fold pre code{background:transparent;padding:0;color:inherit;font-size:inherit}
+details.code-fold pre code{background:transparent;padding:0;color:inherit;font-size:inherit;border:0}
 
 /* ---------- instrument panels ---------- */
 .panel{
-  background:var(--surface); border:1px solid var(--rule);
-  margin:34px 0; padding:26px 24px;
+  background:var(--surface); border:1px solid var(--rule); border-radius:6px;
+  margin:34px 0; padding:24px 22px;
 }
 .panel-head{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:baseline;justify-content:space-between;margin-bottom:20px}
-.panel-title{font-family:"Archivo",sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);margin:0}
-.hint{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-faint)}
+.panel-title{font-family:"JetBrains Mono",monospace;font-size:.75rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);margin:0}
+.hint{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-faint)}
 
 /* ---------- ladder ---------- */
-.scaletoggle{display:flex;gap:0;border:1px solid var(--rule)}
+.scaletoggle{display:flex;gap:0;border:1px solid var(--rule);border-radius:4px;overflow:hidden}
 .scaletoggle button{
-  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.04em;
+  font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.02em;
   background:transparent;color:var(--ink-dim);border:0;padding:6px 11px;cursor:pointer;
 }
 .scaletoggle button[aria-pressed="true"]{background:var(--ink);color:var(--ground)}
 .ladder{display:flex;flex-direction:column;gap:3px}
 .ladder-divider{
-  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;
+  font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.08em;
   text-transform:uppercase;color:var(--ink-faint);padding:10px 12px 4px;
   border-top:1px dashed var(--rule);margin-top:4px;
 }
 .rung{
   display:grid; grid-template-columns:minmax(195px,1.4fr) minmax(0,2.5fr) 110px;
   gap:14px; align-items:center;
-  background:none;border:0;
+  background:none;border:0;border-radius:4px;
   padding:9px 10px 9px 12px; cursor:pointer; text-align:left; color:inherit; width:100%;
   font-family:inherit;
 }
@@ -146,17 +147,17 @@ details.code-fold pre code{background:transparent;padding:0;color:inherit;font-s
 .rung[aria-pressed="true"]{background:var(--sunk);outline:1px solid var(--moves)}
 .rung.is-projected{background:var(--proj-soft)}
 .rung.is-projected:hover{background:var(--sunk)}
-.rung:focus-visible{outline:2px solid var(--fixed);outline-offset:-2px}
-.rung-name{font-family:"Archivo",sans-serif;font-size:.88rem;font-weight:600;letter-spacing:-.005em;line-height:1.25}
-.rung-year{display:block;font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:400;color:var(--ink-faint);letter-spacing:.06em;margin-top:3px}
+.rung:focus-visible{outline:2px solid var(--moves);outline-offset:-2px}
+.rung-name{font-family:"Inter",sans-serif;font-size:.86rem;font-weight:500;letter-spacing:-.005em;line-height:1.25;color:var(--ink)}
+.rung-year{display:block;font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:400;color:var(--ink-faint);letter-spacing:.03em;margin-top:3px}
 .rung-year .who{color:var(--ink-mid);font-weight:500}
 .rung[aria-pressed="true"] .rung-year .who{color:var(--moves)}
 .byline{
-  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.05em;
+  font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.03em;
   color:var(--ink-dim);margin:0 0 12px;
 }
 .byline .who{color:var(--moves);font-weight:500}
-.track{height:19px;background:var(--sunk);position:relative;overflow:hidden;border:1px solid var(--rule-soft)}
+.track{height:18px;background:var(--sunk);position:relative;overflow:hidden;border:1px solid var(--rule-soft);border-radius:3px}
 .bar{position:absolute;inset-block:0;left:0;background:var(--fixed);transition:width .5s cubic-bezier(.2,.7,.3,1)}
 .bar.is-projected{
   background:repeating-linear-gradient(-45deg,var(--proj),var(--proj) 5px,transparent 5px,transparent 9px);
@@ -167,60 +168,60 @@ details.code-fold pre code{background:transparent;padding:0;color:inherit;font-s
   background:repeating-linear-gradient(-45deg,var(--moves),var(--moves) 5px,transparent 5px,transparent 9px);
   border-right:2px solid var(--moves);
 }
-.rung-score{font-family:"IBM Plex Mono",monospace;font-size:.86rem;font-weight:500;text-align:right;letter-spacing:-.025em}
-.offscale{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--ink-faint);position:absolute;right:6px;top:50%;transform:translateY(-50%)}
-.baseline-label{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--ink-faint);position:absolute;left:8px;top:50%;transform:translateY(-50%)}
+.rung-score{font-family:"JetBrains Mono",monospace;font-size:.84rem;font-weight:500;text-align:right;letter-spacing:-.02em;color:var(--ink)}
+.offscale{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-faint);position:absolute;right:6px;top:50%;transform:translateY(-50%)}
+.baseline-label{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-faint);position:absolute;left:8px;top:50%;transform:translateY(-50%)}
 
 /* ---------- detail readout ---------- */
 .readout{margin-top:22px;border-top:1px solid var(--rule);padding-top:20px}
 .eq{
   display:flex;flex-wrap:wrap;align-items:stretch;gap:0;
-  font-family:"IBM Plex Mono",monospace;margin-bottom:20px;
+  font-family:"JetBrains Mono",monospace;margin-bottom:20px;
 }
 .term{padding:11px 16px 11px 0;margin-right:16px;border-right:1px solid var(--rule)}
 .term:last-child{border-right:0;margin-right:0;padding-right:0}
-.term-lab{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
-.term-val{display:block;font-size:1.12rem;font-weight:500;letter-spacing:-.02em}
-.term.is-fixed .term-val{color:var(--fixed)}
+.term-lab{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+.term-val{display:block;font-size:1.08rem;font-weight:500;letter-spacing:-.02em;color:var(--ink)}
+.term.is-fixed .term-val{color:var(--ink)}
 .term.is-moves .term-val{color:var(--moves)}
 .term-sub{display:block;font-size:10.5px;color:var(--ink-dim);margin-top:3px}
-.detail-what{font-size:.98rem;color:var(--ink-mid);margin:0 0 14px;max-width:62ch}
+.detail-what{font-size:.94rem;color:var(--ink-mid);margin:0 0 14px;max-width:62ch}
 .detail-what b{color:var(--ink);font-weight:600}
 .delta{
-  display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;
-  background:var(--moves-soft);color:var(--moves);padding:3px 9px;letter-spacing:.03em;
+  display:inline-block;font-family:"JetBrains Mono",monospace;font-size:11px;
+  background:var(--moves-soft);color:var(--moves);padding:3px 9px;letter-spacing:.02em;border-radius:4px;
 }
 
 /* ---------- stepper ---------- */
 .steps-nav{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:24px}
 .step-dot{
-  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.05em;
-  padding:6px 10px;border:1px solid var(--rule);background:transparent;color:var(--ink-dim);cursor:pointer;
+  font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.04em;
+  padding:6px 10px;border:1px solid var(--rule);background:transparent;color:var(--ink-dim);cursor:pointer;border-radius:4px;
 }
 .step-dot:hover{border-color:var(--ink-dim);color:var(--ink)}
 .step-dot[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
-.step-dot:focus-visible{outline:2px solid var(--fixed);outline-offset:2px}
-.step-phase{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--moves);background:var(--moves-soft);padding:3px 8px;margin-bottom:10px}
-.step-title{font-family:"Archivo",sans-serif;font-size:1.22rem;font-weight:600;letter-spacing:-.015em;margin:0 0 18px;text-wrap:balance}
+.step-dot:focus-visible{outline:2px solid var(--moves);outline-offset:2px}
+.step-phase{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--moves);background:var(--moves-soft);padding:3px 8px;margin-bottom:10px;border-radius:4px}
+.step-title{font-family:"Inter",sans-serif;font-size:1.15rem;font-weight:600;letter-spacing:-.015em;margin:0 0 18px;text-wrap:balance;color:var(--ink)}
 .step-row{display:grid;grid-template-columns:140px 1fr;gap:18px;padding:13px 0;border-top:1px solid var(--rule-soft);align-items:start}
 .step-row:first-of-type{border-top:0;padding-top:0}
-.step-k{font-family:"Archivo",sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);padding-top:4px}
-.step-v{font-size:.96rem;line-height:1.55;color:var(--ink-mid)}
+.step-k{font-family:"JetBrains Mono",monospace;font-size:.68rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);padding-top:4px}
+.step-v{font-size:.94rem;line-height:1.58;color:var(--ink-mid)}
 .step-v b{color:var(--ink);font-weight:600}
-.step-v.formula{font-family:"IBM Plex Mono",monospace;font-size:.88rem;color:var(--ink);line-height:1.75;overflow-x:auto}
-.step-v.cost{font-family:"IBM Plex Mono",monospace;font-size:.88rem;color:var(--ink);line-height:1.65}
+.step-v.formula{font-family:"JetBrains Mono",monospace;font-size:.86rem;color:var(--ink);line-height:1.75;overflow-x:auto}
+.step-v.cost{font-family:"JetBrains Mono",monospace;font-size:.86rem;color:var(--ink);line-height:1.65}
 .cost-split{display:flex;flex-direction:column;gap:4px}
-.cost-general{color:var(--fixed);font-weight:500}
+.cost-general{color:var(--ink-mid);font-weight:500}
 .cost-specific{color:var(--moves);font-weight:500}
 .step-foot{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;border-top:1px solid var(--rule);padding-top:18px;margin-top:20px}
 .unknown{flex:1 1 240px;min-width:200px}
-.unknown-lab{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--ink-faint);margin-bottom:6px;letter-spacing:.04em}
-.unknown-track{height:8px;background:var(--sunk);position:relative;overflow:hidden}
-.unknown-fill{position:absolute;inset-block:0;left:0;background:var(--fixed);transition:width .45s cubic-bezier(.2,.7,.3,1)}
+.unknown-lab{display:flex;justify-content:space-between;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-faint);margin-bottom:6px;letter-spacing:.04em}
+.unknown-track{height:8px;background:var(--sunk);position:relative;overflow:hidden;border-radius:4px}
+.unknown-fill{position:absolute;inset-block:0;left:0;background:var(--moves);transition:width .45s cubic-bezier(.2,.7,.3,1)}
 .navbtns{display:flex;gap:6px}
 .navbtn{
-  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.04em;
-  border:1px solid var(--rule);background:transparent;color:var(--ink);padding:7px 14px;cursor:pointer;
+  font-family:"JetBrains Mono",monospace;font-size:11.5px;letter-spacing:.02em;
+  border:1px solid var(--rule);background:transparent;color:var(--ink);padding:7px 14px;cursor:pointer;border-radius:4px;
 }
 .navbtn:hover:not(:disabled){background:var(--sunk)}
 .navbtn:disabled{color:var(--ink-faint);cursor:default;opacity:.5}
@@ -235,45 +236,46 @@ details.code-fold pre code{background:transparent;padding:0;color:inherit;font-s
 input[type=range]{width:100%;accent-color:var(--moves);margin:0}
 .slider-row{display:flex;flex-direction:column;gap:10px}
 .slider-control-group{display:flex;flex-direction:column;gap:5px;margin-top:4px}
-.slider-label-line{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-mid)}
-.slider-caps{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ink-faint)}
+.slider-label-line{display:flex;justify-content:space-between;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-mid)}
+.slider-caps{display:flex;justify-content:space-between;font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-faint)}
 .dstat{display:flex;flex-direction:column;gap:12px}
 .dstat-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;border-bottom:1px dotted var(--rule);padding-bottom:7px}
-.dstat-k{font-family:"Archivo",sans-serif;font-size:.78rem;font-weight:500;color:var(--ink-dim);letter-spacing:.02em}
-.dstat-v{font-family:"IBM Plex Mono",monospace;font-size:1rem;font-weight:500;letter-spacing:-.02em}
-.verdict{font-family:"IBM Plex Mono",monospace;font-size:11.5px;padding:8px 11px;line-height:1.45}
-.verdict.ok{background:var(--fixed-soft);color:var(--fixed)}
-.verdict.no{background:var(--moves-soft);color:var(--moves)}
+.dstat-k{font-family:"Inter",sans-serif;font-size:.8rem;font-weight:400;color:var(--ink-dim)}
+.dstat-v{font-family:"JetBrains Mono",monospace;font-size:.95rem;font-weight:500;letter-spacing:-.02em;color:var(--ink)}
+.verdict{font-family:"JetBrains Mono",monospace;font-size:11px;padding:8px 11px;line-height:1.45;border-radius:4px}
+.verdict.ok{background:var(--moves-soft);color:var(--moves)}
+.verdict.no{background:var(--sunk);color:var(--ink-mid);border:1px solid var(--rule)}
 
 /* ---------- figures ---------- */
-figure{margin:34px auto;max-width:67ch;background:var(--surface);border:1px solid var(--rule);padding:20px 22px 18px}
+figure{margin:34px auto;max-width:68ch;background:var(--surface);border:1px solid var(--rule);padding:20px 22px 18px;border-radius:6px}
 figure svg{display:block;width:100%;max-width:100%;height:auto;color:var(--ink-mid)}
-figcaption{font-size:.87rem;color:var(--ink-dim);margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-soft);line-height:1.5}
+figcaption{font-size:.85rem;color:var(--ink-dim);margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-soft);line-height:1.55}
 figcaption b{color:var(--ink);font-weight:600}
 
 /* ---------- bibliography ---------- */
-footer{padding-block:44px 76px;color:var(--ink-dim);font-size:.9rem;line-height:1.6}
-.rule-lab{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 16px}
-.bib-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px}
-.bib-item{display:grid;grid-template-columns:36px 1fr;gap:8px;align-items:baseline;padding:10px 14px;background:var(--surface);border:1px solid var(--rule-soft)}
+footer{padding-block:44px 76px;color:var(--ink-dim);font-size:.88rem;line-height:1.6}
+.rule-lab{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 16px}
+.bib-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+.bib-item{display:grid;grid-template-columns:36px 1fr;gap:8px;align-items:baseline;padding:12px 14px;background:var(--surface);border:1px solid var(--rule);border-radius:6px}
 .bib-item:target{border-color:var(--moves);background:var(--moves-soft)}
-.bib-num{font-family:"IBM Plex Mono",monospace;font-size:.82rem;font-weight:600;color:var(--moves)}
-.bib-body{font-size:.92rem;color:var(--ink-mid)}
+.bib-num{font-family:"JetBrains Mono",monospace;font-size:.8rem;font-weight:500;color:var(--ink-dim)}
+.bib-body{font-size:.88rem;color:var(--ink-mid)}
 .bib-body b{color:var(--ink);font-weight:600}
-.bib-body a{color:var(--fixed);text-decoration:underline;font-family:"IBM Plex Mono",monospace;font-size:.82rem;margin-left:6px}
+.bib-body a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;font-family:"JetBrains Mono",monospace;font-size:.8rem;margin-left:6px}
+.bib-body a:hover{color:var(--moves)}
 
-.top-nav{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-block:18px;border-bottom:1px solid var(--rule);font-family:"IBM Plex Mono",monospace;font-size:12px}
-.top-nav a{color:var(--ink-mid);text-decoration:none}
-.top-nav a:hover{color:var(--ink);text-decoration:underline}
-.top-nav-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.btn-action{font-family:"IBM Plex Mono",monospace;font-size:11.5px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);padding:5px 11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
-.btn-action:hover{background:var(--sunk)}
+.top-nav{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-block:16px;border-bottom:1px solid var(--rule);font-family:"Inter",sans-serif;font-size:13.5px}
+.top-nav a{color:var(--ink-dim);text-decoration:none;transition:color .15s ease}
+.top-nav a:hover{color:var(--ink)}
+.top-nav-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn-action{font-family:"JetBrains Mono",monospace;font-size:11.5px;border:1px solid var(--rule);background:var(--surface);color:var(--ink-mid);padding:6px 12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;border-radius:6px;transition:all .15s ease}
+.btn-action:hover{background:var(--sunk);color:var(--ink);border-color:var(--ink-faint);text-decoration:none}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media(max-width:560px){
   .rung{grid-template-columns:1fr 74px;gap:8px}
   .rung .track{grid-column:1/-1;order:3}
-  body{font-size:16px}
+  body{font-size:14.5px}
 }
 </style>
 </head>
@@ -371,11 +373,11 @@ def Sb(T):
           <polygon points="0,1 9,5 0,9" fill="currentColor"/>
         </marker>
         <marker id="ahm1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <polygon points="0,1 9,5 0,9" fill="#B5316B"/>
+          <polygon points="0,1 9,5 0,9" fill="var(--moves)"/>
         </marker>
       </defs>
 
-      <text x="20" y="22" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" letter-spacing=".8">PRIOR IMPLEMENTATIONS — recursive CRT tree &amp; backtracking across 4b₁, 4b₂, …</text>
+      <text x="20" y="22" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" letter-spacing=".8">PRIOR IMPLEMENTATIONS — recursive CRT tree &amp; backtracking across 4b₁, 4b₂, …</text>
       <g stroke="currentColor" stroke-width="1.3" fill="none" opacity=".7">
         <circle cx="48" cy="68" r="5" fill="currentColor"/>
         <line x1="53" y1="68" x2="145" y2="48" marker-end="url(#ah1)"/>
@@ -387,32 +389,32 @@ def Sb(T):
         <line x1="156" y1="88" x2="248" y2="78" marker-end="url(#ah1)"/>
         <line x1="156" y1="88" x2="248" y2="98" marker-end="url(#ah1)"/>
       </g>
-      <text x="266" y="52" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".8">✗ gcd(4b₁, 4b₂) = 4 mismatch → backtrack tree</text>
-      <text x="266" y="88" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".8">✗ big-integer CRT recomputed at every node</text>
+      <text x="266" y="52" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" opacity=".8">✗ gcd(4b₁, 4b₂) = 4 mismatch → backtrack tree</text>
+      <text x="266" y="88" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" opacity=".8">✗ big-integer CRT recomputed at every node</text>
 
       <line x1="20" y1="120" x2="660" y2="120" stroke="currentColor" stroke-width="1" opacity=".2"/>
 
-      <text x="20" y="146" font-family="IBM Plex Mono, monospace" font-size="11" fill="#B5316B" letter-spacing=".8">MOD-4 ALIGNMENT — linear filter x ≡ 3 (mod 4) across R<tspan dy="3" font-size="8.5">b</tspan><tspan dy="-3">, then ONE final CRT</tspan></text>
-      <g font-family="IBM Plex Mono, monospace" font-size="11">
-        <rect x="20" y="162" width="116" height="38" fill="none" stroke="#B5316B" stroke-width="1.4"/>
-        <text x="78" y="185" fill="#B5316B" text-anchor="middle">R<tspan dy="3" font-size="8.5">2</tspan><tspan dy="-3">: x ≡ 3 (4)</tspan></text>
+      <text x="20" y="146" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--moves)" letter-spacing=".8">MOD-4 ALIGNMENT — linear filter x ≡ 3 (mod 4) across R<tspan dy="3" font-size="8.5">b</tspan><tspan dy="-3">, then ONE final CRT</tspan></text>
+      <g font-family="JetBrains Mono, monospace" font-size="11">
+        <rect x="20" y="162" width="116" height="38" fill="none" stroke="var(--moves)" stroke-width="1.4"/>
+        <text x="78" y="185" fill="var(--moves)" text-anchor="middle">R<tspan dy="3" font-size="8.5">2</tspan><tspan dy="-3">: x ≡ 3 (4)</tspan></text>
 
-        <rect x="166" y="162" width="116" height="38" fill="none" stroke="#B5316B" stroke-width="1.4"/>
-        <text x="224" y="185" fill="#B5316B" text-anchor="middle">R<tspan dy="3" font-size="8.5">3</tspan><tspan dy="-3">: x ≡ 3 (4)</tspan></text>
+        <rect x="166" y="162" width="116" height="38" fill="none" stroke="var(--moves)" stroke-width="1.4"/>
+        <text x="224" y="185" fill="var(--moves)" text-anchor="middle">R<tspan dy="3" font-size="8.5">3</tspan><tspan dy="-3">: x ≡ 3 (4)</tspan></text>
 
-        <rect x="312" y="162" width="116" height="38" fill="none" stroke="#B5316B" stroke-width="1.4"/>
-        <text x="370" y="185" fill="#B5316B" text-anchor="middle">R<tspan dy="3" font-size="8.5">b</tspan><tspan dy="-3">: x ≡ 3 (4)</tspan></text>
+        <rect x="312" y="162" width="116" height="38" fill="none" stroke="var(--moves)" stroke-width="1.4"/>
+        <text x="370" y="185" fill="var(--moves)" text-anchor="middle">R<tspan dy="3" font-size="8.5">b</tspan><tspan dy="-3">: x ≡ 3 (4)</tspan></text>
 
-        <rect x="466" y="158" width="194" height="46" fill="none" stroke="#B5316B" stroke-width="1.8"/>
-        <text x="563" y="177" fill="#B5316B" text-anchor="middle" font-weight="600">SINGLE FINAL CRT</text>
-        <text x="563" y="194" fill="#B5316B" text-anchor="middle" font-size="10">p₁ ≡ r (mod M)</text>
+        <rect x="466" y="158" width="194" height="46" fill="none" stroke="var(--moves)" stroke-width="1.8"/>
+        <text x="563" y="177" fill="var(--moves)" text-anchor="middle" font-weight="600">SINGLE FINAL CRT</text>
+        <text x="563" y="194" fill="var(--moves)" text-anchor="middle" font-size="10">p₁ ≡ r (mod M)</text>
       </g>
-      <g stroke="#B5316B" stroke-width="1.4" fill="none" marker-end="url(#ahm1)">
+      <g stroke="var(--moves)" stroke-width="1.4" fill="none" marker-end="url(#ahm1)">
         <line x1="136" y1="181" x2="162" y2="181"/>
         <line x1="282" y1="181" x2="308" y2="181"/>
         <line x1="428" y1="181" x2="462" y2="181"/>
       </g>
-      <text x="340" y="226" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" text-anchor="middle" opacity=".75">gcd(4bᵢ, 4bⱼ) = 4 for all i ≠ j  ⟹  matching mod 4 guarantees CRT compatibility</text>
+      <text x="340" y="226" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" text-anchor="middle" opacity=".75">gcd(4bᵢ, 4bⱼ) = 4 for all i ≠ j  ⟹  matching mod 4 guarantees CRT compatibility</text>
     </svg>
     <figcaption><b>Why backtracking CRT is unnecessary.</b> Every modulus \(4b\) is four times a distinct prime, so their pairwise greatest common divisor is always \(4\). Picking one residue from each \(R_b\) in the same residue class modulo \(4\) guarantees that a single call to <code>crt()</code> succeeds at the end.</figcaption>
   </figure>
@@ -467,7 +469,7 @@ mod = 4 * prod(T) * k[2] * k[3]</code></pre>
 
   <figure>
     <svg viewBox="0 0 680 220" role="img" aria-label="Segmented bytearray sieve eliminating three arithmetic progressions b1, b2, b3 modulo each prime q > t">
-      <text x="20" y="22" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" letter-spacing=".8">SEGMENT [k₀, k₀ + L) — 3 residue progressions eliminated per prime q ∈ (t, B]</text>
+      <text x="20" y="22" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" letter-spacing=".8">SEGMENT [k₀, k₀ + L) — 3 residue progressions eliminated per prime q ∈ (t, B]</text>
       <g transform="translate(20, 38)">
         <rect x="0" y="0" width="640" height="36" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/>
         <g stroke="currentColor" stroke-width="1" opacity=".2">
@@ -479,39 +481,39 @@ mod = 4 * prod(T) * k[2] * k[3]</code></pre>
           <line x1="512" y1="0" x2="512" y2="36"/><line x1="544" y1="0" x2="544" y2="36"/><line x1="576" y1="0" x2="576" y2="36"/>
           <line x1="608" y1="0" x2="608" y2="36"/>
         </g>
-        <g fill="#B5316B" opacity=".22">
+        <g fill="var(--moves)" opacity=".18">
           <rect x="32" y="0" width="32" height="36"/><rect x="256" y="0" width="32" height="36"/><rect x="480" y="0" width="32" height="36"/>
           <rect x="96" y="0" width="32" height="36"/><rect x="320" y="0" width="32" height="36"/><rect x="544" y="0" width="32" height="36"/>
           <rect x="160" y="0" width="32" height="36"/><rect x="384" y="0" width="32" height="36"/><rect x="608" y="0" width="32" height="36"/>
         </g>
-        <g fill="#3D5A80" opacity=".22">
+        <g fill="var(--fixed)" opacity=".18">
           <rect x="0" y="0" width="32" height="36"/><rect x="192" y="0" width="32" height="36"/><rect x="416" y="0" width="32" height="36"/><rect x="576" y="0" width="32" height="36"/>
         </g>
-        <g font-family="IBM Plex Mono, monospace" font-size="10.5" text-anchor="middle">
-          <text x="16" y="22" fill="#3D5A80" font-weight="600">1</text>
-          <text x="48" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">1</tspan></text>
-          <text x="112" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">2</tspan></text>
-          <text x="176" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">3</tspan></text>
-          <text x="208" y="22" fill="#3D5A80" font-weight="600">1</text>
-          <text x="272" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">1</tspan></text>
-          <text x="336" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">2</tspan></text>
-          <text x="400" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">3</tspan></text>
-          <text x="432" y="22" fill="#3D5A80" font-weight="600">1</text>
-          <text x="496" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">1</tspan></text>
-          <text x="560" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">2</tspan></text>
-          <text x="592" y="22" fill="#3D5A80" font-weight="600">1</text>
-          <text x="624" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">3</tspan></text>
+        <g font-family="JetBrains Mono, monospace" font-size="10.5" text-anchor="middle">
+          <text x="16" y="22" fill="var(--ink)" font-weight="600">1</text>
+          <text x="48" y="22" fill="var(--moves)">b<tspan dy="2" font-size="8">1</tspan></text>
+          <text x="112" y="22" fill="var(--moves)">b<tspan dy="2" font-size="8">2</tspan></text>
+          <text x="176" y="22" fill="var(--moves)">b<tspan dy="2" font-size="8">3</tspan></text>
+          <text x="208" y="22" fill="var(--ink)" font-weight="600">1</text>
+          <text x="272" y="22" fill="var(--moves)">b<tspan dy="2" font-size="8">1</tspan></text>
+          <text x="336" y="22" fill="var(--moves)">b<tspan dy="2" font-size="8">2</tspan></text>
+          <text x="400" y="22" fill="var(--moves)">b<tspan dy="2" font-size="8">3</tspan></text>
+          <text x="432" y="22" fill="var(--ink)" font-weight="600">1</text>
+          <text x="496" y="22" fill="var(--moves)">b<tspan dy="2" font-size="8">1</tspan></text>
+          <text x="560" y="22" fill="var(--moves)">b<tspan dy="2" font-size="8">2</tspan></text>
+          <text x="592" y="22" fill="var(--ink)" font-weight="600">1</text>
+          <text x="624" y="22" fill="var(--moves)">b<tspan dy="2" font-size="8">3</tspan></text>
         </g>
       </g>
-      <path d="M68 78 Q180 108 292 78" fill="none" stroke="#B5316B" stroke-width="1.3" marker-end="url(#ahm1)"/>
-      <path d="M292 78 Q404 108 516 78" fill="none" stroke="#B5316B" stroke-width="1.3" marker-end="url(#ahm1)"/>
-      <text x="340" y="122" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#B5316B" text-anchor="middle">good[i::q] = zero_buf[:n] — stride-q slice assignment per residue b₁, b₂, b₃</text>
+      <path d="M68 78 Q180 108 292 78" fill="none" stroke="var(--moves)" stroke-width="1.3" marker-end="url(#ahm1)"/>
+      <path d="M292 78 Q404 108 516 78" fill="none" stroke="var(--moves)" stroke-width="1.3" marker-end="url(#ahm1)"/>
+      <text x="340" y="122" font-family="JetBrains Mono, monospace" font-size="10.5" fill="var(--moves)" text-anchor="middle">good[i::q] = zero_buf[:n] — stride-q slice assignment per residue b₁, b₂, b₃</text>
 
-      <line x1="36" y1="154" x2="612" y2="154" stroke="#3D5A80" stroke-width="1.4" stroke-dasharray="4 3"/>
-      <circle cx="36" cy="154" r="4.5" fill="#3D5A80"/><circle cx="228" cy="154" r="4.5" fill="#3D5A80"/>
-      <circle cx="452" cy="154" r="4.5" fill="#3D5A80"/><circle cx="612" cy="154" r="4.5" fill="#3D5A80"/>
-      <text x="340" y="180" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#3D5A80" text-anchor="middle">i = good.find(1, i + 1) — jumps directly between surviving 1-bytes via C memchr</text>
-      <text x="340" y="202" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".7" text-anchor="middle">surviving fraction after sieving q ∈ (t, t²] is (ln t / ln t²)³ = (1/2)³ = 12.5%</text>
+      <line x1="36" y1="154" x2="612" y2="154" stroke="var(--ink)" stroke-width="1.4" stroke-dasharray="4 3"/>
+      <circle cx="36" cy="154" r="4.5" fill="var(--ink)"/><circle cx="228" cy="154" r="4.5" fill="var(--ink)"/>
+      <circle cx="452" cy="154" r="4.5" fill="var(--ink)"/><circle cx="612" cy="154" r="4.5" fill="var(--ink)"/>
+      <text x="340" y="180" font-family="JetBrains Mono, monospace" font-size="10.5" fill="var(--ink)" text-anchor="middle">i = good.find(1, i + 1) — jumps directly between surviving 1-bytes via C memchr</text>
+      <text x="340" y="202" font-family="JetBrains Mono, monospace" font-size="10" fill="currentColor" opacity=".7" text-anchor="middle">surviving fraction after sieving q ∈ (t, t²] is (ln t / ln t²)³ = (1/2)³ = 12.5%</text>
     </svg>
     <figcaption><b>Three progressions per prime, zeroed by slice assignment.</b> Each prime \(q \in (t, B]\) strikes out three arithmetic progressions \(b_1, b_2, b_3 \pmod q\) corresponding to \(q \mid p_1\), \(q \mid p_2\), and \(q \mid p_3\). Scanning survivors with <code>bytearray.find(1)</code> skips zeroed runs in native C.</figcaption>
   </figure>
@@ -565,9 +567,9 @@ def sieve_block(k0, L, data, zero_buf):
 
   <figure>
     <svg viewBox="0 0 680 225" role="img" aria-label="Decision tree for Base-2 Miller-Rabin by residue class modulo 8 using quadratic reciprocity">
-      <text x="20" y="22" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" letter-spacing=".8">QUADRATIC RECIPROCITY DISPATCH — determined once before the sieve loop</text>
+      <text x="20" y="22" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" letter-spacing=".8">QUADRATIC RECIPROCITY DISPATCH — determined once before the sieve loop</text>
       <rect x="220" y="36" width="240" height="36" fill="none" stroke="currentColor" stroke-width="1.4"/>
-      <text x="340" y="58" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" text-anchor="middle">pᵢ mod 8 (fixed by r and kᵢ mod 8)</text>
+      <text x="340" y="58" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" text-anchor="middle">pᵢ mod 8 (fixed by r and kᵢ mod 8)</text>
 
       <g stroke="currentColor" stroke-width="1.2" fill="none" opacity=".6">
         <path d="M265 72 L95.5 114"/>
@@ -576,29 +578,29 @@ def sieve_block(k0, L, data, zero_buf):
         <path d="M415 72 L584.5 114"/>
       </g>
 
-      <rect x="20" y="114" width="151" height="90" fill="none" stroke="#B5316B" stroke-width="1.7"/>
-      <text x="95.5" y="135" font-family="IBM Plex Mono, monospace" font-size="11" fill="#B5316B" font-weight="600" text-anchor="middle">p ≡ 3 (mod 8)</text>
-      <text x="95.5" y="153" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">(2/p) = −1, s = 1</text>
-      <text x="95.5" y="171" font-family="IBM Plex Mono, monospace" font-size="10" fill="#B5316B" text-anchor="middle">2^((p−1)≫1) ≡ −1</text>
-      <text x="95.5" y="190" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity=".7" text-anchor="middle">0 loops · no valuation</text>
+      <rect x="20" y="114" width="151" height="90" fill="none" stroke="var(--moves)" stroke-width="1.7"/>
+      <text x="95.5" y="135" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--moves)" font-weight="600" text-anchor="middle">p ≡ 3 (mod 8)</text>
+      <text x="95.5" y="153" font-family="JetBrains Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">(2/p) = −1, s = 1</text>
+      <text x="95.5" y="171" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--moves)" text-anchor="middle">2^((p−1)≫1) ≡ −1</text>
+      <text x="95.5" y="190" font-family="JetBrains Mono, monospace" font-size="9.5" fill="currentColor" opacity=".7" text-anchor="middle">0 loops · no valuation</text>
 
-      <rect x="183" y="114" width="151" height="90" fill="none" stroke="#3D5A80" stroke-width="1.5"/>
-      <text x="258.5" y="135" font-family="IBM Plex Mono, monospace" font-size="11" fill="#3D5A80" font-weight="600" text-anchor="middle">p ≡ 5 (mod 8)</text>
-      <text x="258.5" y="153" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">(2/p) = −1, s = 2</text>
-      <text x="258.5" y="171" font-family="IBM Plex Mono, monospace" font-size="10" fill="#3D5A80" text-anchor="middle">(2^d)² ≡ −1 (mod p)</text>
-      <text x="258.5" y="190" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity=".7" text-anchor="middle">1 square · no valuation</text>
+      <rect x="183" y="114" width="151" height="90" fill="none" stroke="var(--ink)" stroke-width="1.4"/>
+      <text x="258.5" y="135" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--ink)" font-weight="600" text-anchor="middle">p ≡ 5 (mod 8)</text>
+      <text x="258.5" y="153" font-family="JetBrains Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">(2/p) = −1, s = 2</text>
+      <text x="258.5" y="171" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--ink)" text-anchor="middle">(2^d)² ≡ −1 (mod p)</text>
+      <text x="258.5" y="190" font-family="JetBrains Mono, monospace" font-size="9.5" fill="currentColor" opacity=".7" text-anchor="middle">1 square · no valuation</text>
 
       <rect x="346" y="114" width="151" height="90" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".75"/>
-      <text x="421.5" y="135" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" text-anchor="middle">p ≡ 7 (mod 8)</text>
-      <text x="421.5" y="153" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">(2/p) = +1, s = 1</text>
-      <text x="421.5" y="171" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">2^((p−1)≫1) ≡ +1</text>
-      <text x="421.5" y="190" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity=".7" text-anchor="middle">excluded when 2 ∈ T</text>
+      <text x="421.5" y="135" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" text-anchor="middle">p ≡ 7 (mod 8)</text>
+      <text x="421.5" y="153" font-family="JetBrains Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">(2/p) = +1, s = 1</text>
+      <text x="421.5" y="171" font-family="JetBrains Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">2^((p−1)≫1) ≡ +1</text>
+      <text x="421.5" y="190" font-family="JetBrains Mono, monospace" font-size="9.5" fill="currentColor" opacity=".7" text-anchor="middle">excluded when 2 ∈ T</text>
 
       <rect x="509" y="114" width="151" height="90" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3" opacity=".65"/>
-      <text x="584.5" y="135" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" text-anchor="middle">p ≡ 1 (mod 8)</text>
-      <text x="584.5" y="153" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">(2/p) = +1, s ≥ 3</text>
-      <text x="584.5" y="171" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">loop r ≤ s−2 + sq chk</text>
-      <text x="584.5" y="190" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity=".7" text-anchor="middle">excluded when 2 ∈ T</text>
+      <text x="584.5" y="135" font-family="JetBrains Mono, monospace" font-size="11" fill="currentColor" text-anchor="middle">p ≡ 1 (mod 8)</text>
+      <text x="584.5" y="153" font-family="JetBrains Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">(2/p) = +1, s ≥ 3</text>
+      <text x="584.5" y="171" font-family="JetBrains Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">loop r ≤ s−2 + sq chk</text>
+      <text x="584.5" y="190" font-family="JetBrains Mono, monospace" font-size="9.5" fill="currentColor" opacity=".7" text-anchor="middle">excluded when 2 ∈ T</text>
     </svg>
     <figcaption><b>Why \(2 \in T\) and mod-4 ordering avoid the slow branches.</b> Since \(b = 2 \in T\) restricts \(S_2 = \{3, 5\} \pmod 8\), none of \(p_1, p_2, p_3\) can land in \(1\) or \(7 \pmod 8\). Prioritizing \(k_2 \equiv k_3 \equiv 1 \pmod 4\) and \(r \equiv 3 \pmod 4\) places all three primes in \(3 \pmod 8\).</figcaption>
   </figure>
@@ -835,9 +837,9 @@ def find_triple(M, r, k2, k3, t, B=t ** 2, block_size=t ** 2):
         </div>
       </li>
     </ol>
-    <div style="margin-top:26px;padding:14px 18px;border:1px solid var(--rule);background:var(--surface);font-size:14.5px;color:var(--ink-mid);line-height:1.6">
-      <strong style="color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px">Author &amp; Provenance</strong>
-      By <strong style="color:var(--ink)">Julio de Mello Bezerra</strong>. This interactive page was created based on <a href="https://github.com/JuliodeMelloBezerra/Strong-Pseudoprimes" target="_blank" rel="noopener noreferrer" style="color:var(--fixed);text-decoration:underline"><em>"Constructing Strong Pseudoprimes"</em></a> article and SageMath program, using AI.
+    <div style="margin-top:26px;padding:14px 18px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);font-size:14px;color:var(--ink-mid);line-height:1.6">
+      <strong style="color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px">Author &amp; Provenance</strong>
+      By <strong style="color:var(--ink)">Julio de Mello Bezerra</strong>. This interactive page was created based on <a href="https://github.com/JuliodeMelloBezerra/Strong-Pseudoprimes" target="_blank" rel="noopener noreferrer" style="color:var(--ink);text-decoration:underline;text-underline-offset:3px"><em>"Constructing Strong Pseudoprimes"</em></a> article and SageMath program, using AI.
     </div>
   </div>
 </footer>
@@ -1199,7 +1201,7 @@ def find_triple(M, r, k2, k3, t, B=t ** 2, block_size=t ** 2):
     chart.appendChild(svgEl("line", { x1:PADL, y1:H-PADB, x2:W-PADR, y2:H-PADB, stroke:"currentColor", "stroke-width":1, opacity:".35" }));
     [Math.round(lo + 0.8), Math.round((lo + hi) / 2), Math.round(hi - 0.8)].forEach(function(v){
       chart.appendChild(svgEl("line", { x1:PADL, y1:yOf(v), x2:W-PADR, y2:yOf(v), stroke:"currentColor", "stroke-width":1, opacity:".12" }));
-      var t = svgEl("text", { x:PADL-7, y:yOf(v)+3.5, "text-anchor":"end", "font-family":"IBM Plex Mono, monospace", "font-size":"10", fill:"currentColor", opacity:".6" });
+      var t = svgEl("text", { x:PADL-7, y:yOf(v)+3.5, "text-anchor":"end", "font-family":"JetBrains Mono, monospace", "font-size":"10", fill:"currentColor", opacity:".6" });
       t.textContent = "10^" + v;
       chart.appendChild(t);
     });
@@ -1211,22 +1213,22 @@ def find_triple(M, r, k2, k3, t, B=t ** 2, block_size=t ** 2):
     chart.appendChild(svgEl("polyline", { points: pts.join(" "), fill:"none", stroke:"currentColor", "stroke-width":1.9, opacity:".7" }));
 
     chart.appendChild(svgEl("line", { x1:xOf(opt.optA), y1:PADT, x2:xOf(opt.optA), y2:H-PADB, stroke:"currentColor", "stroke-width":1, "stroke-dasharray":"3 3", opacity:".55" }));
-    var optTxt = svgEl("text", { x:opt.optA > 2.7 ? xOf(opt.optA)-6 : xOf(opt.optA)+6, y:PADT+12, "text-anchor":opt.optA > 2.7 ? "end" : "start", "font-family":"IBM Plex Mono, monospace", "font-size":"9.5", fill:"currentColor", opacity:".75" });
+    var optTxt = svgEl("text", { x:opt.optA > 2.7 ? xOf(opt.optA)-6 : xOf(opt.optA)+6, y:PADT+12, "text-anchor":opt.optA > 2.7 ? "end" : "start", "font-family":"JetBrains Mono, monospace", "font-size":"9.5", fill:"currentColor", opacity:".75" });
     optTxt.textContent = "min work: a = " + opt.optA.toFixed(2);
     chart.appendChild(optTxt);
 
     var curLog = totalLog10(a, c);
     var optimal = (curLog - opt.minLog <= opt.tol);
-    var col = optimal ? "#3D5A80" : "#B5316B";
+    var col = optimal ? "var(--moves)" : "var(--ink)";
     var curY = yOf(curLog);
     chart.appendChild(svgEl("line", { x1:xOf(a), y1:curY, x2:xOf(a), y2:H-PADB, stroke:col, "stroke-width":1.4, opacity:".6" }));
     chart.appendChild(svgEl("circle", { cx:xOf(a), cy:curY, r:5, fill:col }));
 
-    var lTxt = svgEl("text", { x:PADL, y:H-PADB+18, "font-family":"IBM Plex Mono, monospace", "font-size":"10", fill:"currentColor", opacity:".6" });
+    var lTxt = svgEl("text", { x:PADL, y:H-PADB+18, "font-family":"JetBrains Mono, monospace", "font-size":"10", fill:"currentColor", opacity:".6" });
     lTxt.textContent = "a = 1.0 (undersieved)";
     chart.appendChild(lTxt);
 
-    var rTxt = svgEl("text", { x:W-PADR, y:H-PADB+18, "text-anchor":"end", "font-family":"IBM Plex Mono, monospace", "font-size":"10", fill:"currentColor", opacity:".6" });
+    var rTxt = svgEl("text", { x:W-PADR, y:H-PADB+18, "text-anchor":"end", "font-family":"JetBrains Mono, monospace", "font-size":"10", fill:"currentColor", opacity:".6" });
     rTxt.textContent = "a = 3.5 (oversieved)";
     chart.appendChild(rTxt);
   }
