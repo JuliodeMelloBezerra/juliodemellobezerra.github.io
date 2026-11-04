@@ -1,0 +1,1298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Constructing Strong Pseudoprimes — Julio de Mello Bezerra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+<style>
+:root{
+  --ground:#ECEEF0; --surface:#FAFBFC; --sunk:#E2E6EA;
+  --ink:#161A1F; --ink-mid:#3C4651; --ink-dim:#657280; --ink-faint:#8D98A4;
+  --rule:#CDD4DB; --rule-soft:#DFE4E9;
+  --fixed:#3D5A80; --fixed-soft:#DCE4EF;
+  --moves:#B5316B; --moves-soft:#F4DDE7;
+  --proj:#6E7E85; --proj-soft:#E5EAEB;
+  --shadow:rgba(22,26,31,.09);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#13171B; --surface:#1A1F25; --sunk:#0E1216;
+    --ink:#E8ECF0; --ink-mid:#BAC4CE; --ink-dim:#8A95A1; --ink-faint:#646F7B;
+    --rule:#2C343C; --rule-soft:#232A31;
+    --fixed:#8FB0DC; --fixed-soft:#1E2A3A;
+    --moves:#E8799F; --moves-soft:#351E29;
+    --proj:#94A8B3; --proj-soft:#1F282D;
+    --shadow:rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#13171B; --surface:#1A1F25; --sunk:#0E1216;
+  --ink:#E8ECF0; --ink-mid:#BAC4CE; --ink-dim:#8A95A1; --ink-faint:#646F7B;
+  --rule:#2C343C; --rule-soft:#232A31;
+  --fixed:#8FB0DC; --fixed-soft:#1E2A3A;
+  --moves:#E8799F; --moves-soft:#351E29;
+  --proj:#94A8B3; --proj-soft:#1F282D;
+  --shadow:rgba(0,0,0,.4);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:"Spectral",Georgia,"Times New Roman",serif;
+  font-size:17px; line-height:1.62;
+  margin:0; padding-inline:20px; padding-block:0;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px;margin:0 auto}
+.col{max-width:67ch;margin-inline:auto}
+h1,h2,h3,.ui{font-family:"Archivo",system-ui,-apple-system,sans-serif}
+.mono,code,.num{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+sup,sub{font-size:.72em;line-height:0}
+
+/* ---------- math & citations ---------- */
+.math-display{margin:22px 0;padding:10px 14px;overflow-x:auto;text-align:center;color:var(--ink)}
+a.cite-ref{
+  font-family:"IBM Plex Mono",monospace;font-size:.76em;color:var(--moves);
+  text-decoration:none;margin-left:2px;vertical-align:super;line-height:0;font-weight:500;
+}
+a.cite-ref:hover{text-decoration:underline}
+
+/* ---------- masthead ---------- */
+header{padding-block:68px 40px;border-bottom:1px solid var(--rule)}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);margin:0 0 22px}
+h1{
+  font-size:clamp(1.85rem,5vw,3.25rem); font-weight:800; line-height:1.02;
+  letter-spacing:-.03em; margin:0; text-wrap:balance; hyphens:manual;
+}
+.standfirst{font-size:1.22rem;line-height:1.5;color:var(--ink-mid);max-width:58ch;margin:26px 0 0}
+.standfirst b{font-weight:600;color:var(--ink)}
+.author-byline{font-family:"IBM Plex Mono",monospace;font-size:.88rem;letter-spacing:.04em;color:var(--ink-dim);margin:20px 0 0}
+.author-byline .who{color:var(--moves);font-weight:600}
+
+/* ---------- prose ---------- */
+section{padding-block:52px;border-bottom:1px solid var(--rule-soft)}
+section:last-of-type{border-bottom:0}
+h2{font-size:1.7rem;font-weight:700;letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
+h2 .idx{font-family:"IBM Plex Mono",monospace;font-size:.72rem;font-weight:500;color:var(--moves);letter-spacing:.1em;display:block;margin-bottom:10px;text-transform:uppercase}
+h3{font-size:1.06rem;font-weight:600;letter-spacing:-.005em;margin:34px 0 8px}
+p{margin:0 0 16px}
+.col>p:last-child{margin-bottom:0}
+code{font-size:.88em;background:var(--sunk);padding:.1em .34em;border-radius:3px;color:var(--ink-mid)}
+em{font-style:italic}
+strong{font-weight:600}
+.lede{font-size:1.1rem;color:var(--ink-mid)}
+ul{margin:0 0 16px;padding-left:1.15em}
+li{margin-bottom:7px}
+.aside{
+  border:1px solid var(--rule); background:var(--surface); padding:16px 20px; margin:26px 0;
+  color:var(--ink-mid); font-size:.95rem;
+}
+.aside b{color:var(--ink);font-weight:600}
+
+/* ---------- collapsible code disclosures ---------- */
+details.code-fold{
+  margin:22px 0; border:1px solid var(--rule); background:var(--surface);
+}
+details.code-fold summary{
+  font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.04em;
+  color:var(--ink-mid); padding:10px 16px; cursor:pointer; user-select:none;
+  display:flex; justify-content:space-between; align-items:center;
+}
+details.code-fold summary:hover{background:var(--sunk);color:var(--ink)}
+details.code-fold[open] summary{border-bottom:1px solid var(--rule);color:var(--moves)}
+details.code-fold pre{
+  margin:0; padding:16px; overflow-x:auto; background:var(--sunk);
+  font-family:"IBM Plex Mono",monospace; font-size:12.5px; line-height:1.58; color:var(--ink);
+}
+details.code-fold pre code{background:transparent;padding:0;color:inherit;font-size:inherit}
+
+/* ---------- instrument panels ---------- */
+.panel{
+  background:var(--surface); border:1px solid var(--rule);
+  margin:34px 0; padding:26px 24px;
+}
+.panel-head{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:baseline;justify-content:space-between;margin-bottom:20px}
+.panel-title{font-family:"Archivo",sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);margin:0}
+.hint{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-faint)}
+
+/* ---------- ladder ---------- */
+.scaletoggle{display:flex;gap:0;border:1px solid var(--rule)}
+.scaletoggle button{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.04em;
+  background:transparent;color:var(--ink-dim);border:0;padding:6px 11px;cursor:pointer;
+}
+.scaletoggle button[aria-pressed="true"]{background:var(--ink);color:var(--ground)}
+.ladder{display:flex;flex-direction:column;gap:3px}
+.ladder-divider{
+  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-faint);padding:10px 12px 4px;
+  border-top:1px dashed var(--rule);margin-top:4px;
+}
+.rung{
+  display:grid; grid-template-columns:minmax(195px,1.4fr) minmax(0,2.5fr) 110px;
+  gap:14px; align-items:center;
+  background:none;border:0;
+  padding:9px 10px 9px 12px; cursor:pointer; text-align:left; color:inherit; width:100%;
+  font-family:inherit;
+}
+.rung:hover{background:var(--sunk)}
+.rung[aria-pressed="true"]{background:var(--sunk);outline:1px solid var(--moves)}
+.rung.is-projected{background:var(--proj-soft)}
+.rung.is-projected:hover{background:var(--sunk)}
+.rung:focus-visible{outline:2px solid var(--fixed);outline-offset:-2px}
+.rung-name{font-family:"Archivo",sans-serif;font-size:.88rem;font-weight:600;letter-spacing:-.005em;line-height:1.25}
+.rung-year{display:block;font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:400;color:var(--ink-faint);letter-spacing:.06em;margin-top:3px}
+.rung-year .who{color:var(--ink-mid);font-weight:500}
+.rung[aria-pressed="true"] .rung-year .who{color:var(--moves)}
+.byline{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.05em;
+  color:var(--ink-dim);margin:0 0 12px;
+}
+.byline .who{color:var(--moves);font-weight:500}
+.track{height:19px;background:var(--sunk);position:relative;overflow:hidden;border:1px solid var(--rule-soft)}
+.bar{position:absolute;inset-block:0;left:0;background:var(--fixed);transition:width .5s cubic-bezier(.2,.7,.3,1)}
+.bar.is-projected{
+  background:repeating-linear-gradient(-45deg,var(--proj),var(--proj) 5px,transparent 5px,transparent 9px);
+  border-right:2px solid var(--proj);
+}
+.rung[aria-pressed="true"] .bar{background:var(--moves)}
+.rung[aria-pressed="true"] .bar.is-projected{
+  background:repeating-linear-gradient(-45deg,var(--moves),var(--moves) 5px,transparent 5px,transparent 9px);
+  border-right:2px solid var(--moves);
+}
+.rung-score{font-family:"IBM Plex Mono",monospace;font-size:.86rem;font-weight:500;text-align:right;letter-spacing:-.025em}
+.offscale{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--ink-faint);position:absolute;right:6px;top:50%;transform:translateY(-50%)}
+.baseline-label{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--ink-faint);position:absolute;left:8px;top:50%;transform:translateY(-50%)}
+
+/* ---------- detail readout ---------- */
+.readout{margin-top:22px;border-top:1px solid var(--rule);padding-top:20px}
+.eq{
+  display:flex;flex-wrap:wrap;align-items:stretch;gap:0;
+  font-family:"IBM Plex Mono",monospace;margin-bottom:20px;
+}
+.term{padding:11px 16px 11px 0;margin-right:16px;border-right:1px solid var(--rule)}
+.term:last-child{border-right:0;margin-right:0;padding-right:0}
+.term-lab{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+.term-val{display:block;font-size:1.12rem;font-weight:500;letter-spacing:-.02em}
+.term.is-fixed .term-val{color:var(--fixed)}
+.term.is-moves .term-val{color:var(--moves)}
+.term-sub{display:block;font-size:10.5px;color:var(--ink-dim);margin-top:3px}
+.detail-what{font-size:.98rem;color:var(--ink-mid);margin:0 0 14px;max-width:62ch}
+.detail-what b{color:var(--ink);font-weight:600}
+.delta{
+  display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;
+  background:var(--moves-soft);color:var(--moves);padding:3px 9px;letter-spacing:.03em;
+}
+
+/* ---------- stepper ---------- */
+.steps-nav{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:24px}
+.step-dot{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.05em;
+  padding:6px 10px;border:1px solid var(--rule);background:transparent;color:var(--ink-dim);cursor:pointer;
+}
+.step-dot:hover{border-color:var(--ink-dim);color:var(--ink)}
+.step-dot[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.step-dot:focus-visible{outline:2px solid var(--fixed);outline-offset:2px}
+.step-phase{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--moves);background:var(--moves-soft);padding:3px 8px;margin-bottom:10px}
+.step-title{font-family:"Archivo",sans-serif;font-size:1.22rem;font-weight:600;letter-spacing:-.015em;margin:0 0 18px;text-wrap:balance}
+.step-row{display:grid;grid-template-columns:140px 1fr;gap:18px;padding:13px 0;border-top:1px solid var(--rule-soft);align-items:start}
+.step-row:first-of-type{border-top:0;padding-top:0}
+.step-k{font-family:"Archivo",sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);padding-top:4px}
+.step-v{font-size:.96rem;line-height:1.55;color:var(--ink-mid)}
+.step-v b{color:var(--ink);font-weight:600}
+.step-v.formula{font-family:"IBM Plex Mono",monospace;font-size:.88rem;color:var(--ink);line-height:1.75;overflow-x:auto}
+.step-v.cost{font-family:"IBM Plex Mono",monospace;font-size:.88rem;color:var(--ink);line-height:1.65}
+.cost-split{display:flex;flex-direction:column;gap:4px}
+.cost-general{color:var(--fixed);font-weight:500}
+.cost-specific{color:var(--moves);font-weight:500}
+.step-foot{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;border-top:1px solid var(--rule);padding-top:18px;margin-top:20px}
+.unknown{flex:1 1 240px;min-width:200px}
+.unknown-lab{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--ink-faint);margin-bottom:6px;letter-spacing:.04em}
+.unknown-track{height:8px;background:var(--sunk);position:relative;overflow:hidden}
+.unknown-fill{position:absolute;inset-block:0;left:0;background:var(--fixed);transition:width .45s cubic-bezier(.2,.7,.3,1)}
+.navbtns{display:flex;gap:6px}
+.navbtn{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.04em;
+  border:1px solid var(--rule);background:transparent;color:var(--ink);padding:7px 14px;cursor:pointer;
+}
+.navbtn:hover:not(:disabled){background:var(--sunk)}
+.navbtn:disabled{color:var(--ink-faint);cursor:default;opacity:.5}
+@media(max-width:520px){
+  .step-row{grid-template-columns:1fr;gap:5px}
+  .step-k{padding-top:0}
+}
+
+/* ---------- B = c * t^a slider ---------- */
+.slider-grid{display:grid;grid-template-columns:1fr;gap:22px}
+@media(min-width:720px){.slider-grid{grid-template-columns:1.28fr 1fr;align-items:center}}
+input[type=range]{width:100%;accent-color:var(--moves);margin:0}
+.slider-row{display:flex;flex-direction:column;gap:10px}
+.slider-control-group{display:flex;flex-direction:column;gap:5px;margin-top:4px}
+.slider-label-line{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-mid)}
+.slider-caps{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ink-faint)}
+.dstat{display:flex;flex-direction:column;gap:12px}
+.dstat-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;border-bottom:1px dotted var(--rule);padding-bottom:7px}
+.dstat-k{font-family:"Archivo",sans-serif;font-size:.78rem;font-weight:500;color:var(--ink-dim);letter-spacing:.02em}
+.dstat-v{font-family:"IBM Plex Mono",monospace;font-size:1rem;font-weight:500;letter-spacing:-.02em}
+.verdict{font-family:"IBM Plex Mono",monospace;font-size:11.5px;padding:8px 11px;line-height:1.45}
+.verdict.ok{background:var(--fixed-soft);color:var(--fixed)}
+.verdict.no{background:var(--moves-soft);color:var(--moves)}
+
+/* ---------- figures ---------- */
+figure{margin:34px auto;max-width:67ch;background:var(--surface);border:1px solid var(--rule);padding:20px 22px 18px}
+figure svg{display:block;width:100%;max-width:100%;height:auto;color:var(--ink-mid)}
+figcaption{font-size:.87rem;color:var(--ink-dim);margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-soft);line-height:1.5}
+figcaption b{color:var(--ink);font-weight:600}
+
+/* ---------- bibliography ---------- */
+footer{padding-block:44px 76px;color:var(--ink-dim);font-size:.9rem;line-height:1.6}
+.rule-lab{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 16px}
+.bib-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px}
+.bib-item{display:grid;grid-template-columns:36px 1fr;gap:8px;align-items:baseline;padding:10px 14px;background:var(--surface);border:1px solid var(--rule-soft)}
+.bib-item:target{border-color:var(--moves);background:var(--moves-soft)}
+.bib-num{font-family:"IBM Plex Mono",monospace;font-size:.82rem;font-weight:600;color:var(--moves)}
+.bib-body{font-size:.92rem;color:var(--ink-mid)}
+.bib-body b{color:var(--ink);font-weight:600}
+.bib-body a{color:var(--fixed);text-decoration:underline;font-family:"IBM Plex Mono",monospace;font-size:.82rem;margin-left:6px}
+
+.top-nav{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-block:18px;border-bottom:1px solid var(--rule);font-family:"IBM Plex Mono",monospace;font-size:12px}
+.top-nav a{color:var(--ink-mid);text-decoration:none}
+.top-nav a:hover{color:var(--ink);text-decoration:underline}
+.top-nav-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn-action{font-family:"IBM Plex Mono",monospace;font-size:11.5px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);padding:5px 11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn-action:hover{background:var(--sunk)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media(max-width:560px){
+  .rung{grid-template-columns:1fr 74px;gap:8px}
+  .rung .track{grid-column:1/-1;order:3}
+  body{font-size:16px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<nav class="top-nav" aria-label="Site navigation">
+  <a href="../../">&larr; Julio de Mello Bezerra</a>
+  <div class="top-nav-actions">
+    <a class="btn-action" href="./strong_pseudoprimes_seg_sieve_optimized.py" download="strong_pseudoprimes_seg_sieve_optimized.py">&darr; Download SageMath Script (.py)</a>
+    <button type="button" class="btn-action" id="theme-toggle">Light / Dark</button>
+  </div>
+</nav>
+<header>
+  <div class="col">
+    <p class="eyebrow">Miller–Rabin · Arnault's Method · Adversarial Primality</p>
+    <h1>Constructing Strong Pseudoprimes</h1>
+    <p class="standfirst">How to forge composite numbers <b>n = p<sub>1</sub>p<sub>2</sub>p<sub>3</sub></b> that fool deterministic Miller–Rabin tests across every prime base <b>b ≤ t</b>; and how modulo-4 CRT alignment, segmented sieving, and quadratic reciprocity make the search orders of magnitude faster.</p>
+    <p class="author-byline">By <span class="who">Julio de Mello Bezerra</span></p>
+  </div>
+</header>
+
+<section id="miller-rabin">
+  <div class="col">
+    <h2><span class="idx">01 · The Miller–Rabin Primality Test</span>When primality testing trusts a fixed basis</h2>
+    <p>This SageMath (Python) program efficiently constructs strong pseudoprimes, which intuitively are composite numbers that pass badly-implemented primality tests. It was inspired by a Capture-The-Flag (CTF) challenge that required tricking a server into using a composite number instead of a prime in its Diffie–Hellman encryption scheme.</p>
+    <p>While the main idea follows the method described by Arnault<a href="#ref-1" id="cite-1a" class="cite-ref">[1]</a>, we develop an implementation and specific techniques that make the program much more efficient: a single-pass modulo-4 CRT alignment, a specialized segmented sieve, custom optimized primality tests, and an asymptotic analysis of optimal parameters. Our goal is to construct strong pseudoprimes with respect to the base consisting of all primes smaller than a given \(t &gt; 0\).</p>
+    <p>Any prime number \(p\) satisfies two fundamental algebraic conditions:</p>
+    <ul>
+      <li><strong>Fermat's little theorem:</strong> for any base \(a \in \mathbb{Z}\) not divisible by \(p\), we have \(a^{p-1} \equiv 1 \pmod p\).</li>
+      <li><strong>Roots of unity over \(\mathbb{F}_p\):</strong> the only square roots of unity modulo \(p\) are \(\pm 1\), that is, \(x^2 \equiv 1 \pmod p \iff x \equiv \pm 1 \pmod p\).</li>
+    </ul>
+    <p>The idea behind the Miller–Rabin probabilistic primality test is to check, for a given odd \(n \in \mathbb{Z}\) and coprime base \(a \in \mathbb{Z}\), whether \(n\) satisfies the two properties above. Write \(n - 1 = 2^s d\) with \(d\) odd. If \(n\) were prime, Fermat's little theorem would give \((a^d)^{2^s} \equiv 1 \pmod n\), and taking \(s\) successive square roots forces every intermediate value before the first \(+1\) to be congruent to \(-1\). Thus it is enough to check whether:</p>
+    <div class="math-display">$$a^d \equiv 1 \pmod n \quad \text{or} \quad (a^d)^{2^r} \equiv -1 \pmod n \quad \text{for some } 0 \le r \le s - 1.$$</div>
+    <p>If this holds for a composite \(n\), we call \(n\) a <strong>strong pseudoprime</strong> to the base \(a\). No composite number is a strong pseudoprime for all bases: at most \(1/4\) of the bases \(1 &lt; a &lt; n - 1\) can make \(n\) pass the test, so \(k\) random bases fail to detect a composite with probability at most \((1/4)^k\). However, if the bases are chosen from a fixed set — such as the set \(T\) of all primes smaller than \(t &gt; 0\) — then it is possible to construct a composite number that is a strong pseudoprime to all bases in \(T\) simultaneously<a href="#ref-1" class="cite-ref">[1]</a><a href="#ref-2" id="cite-2a" class="cite-ref">[2]</a>.</p>
+  </div>
+</section>
+
+<section id="arnault">
+  <div class="col">
+    <h2><span class="idx">02 · Arnault's Method</span>From Carmichael numbers to strong pseudoprimes</h2>
+    <p>To understand Arnault's method<a href="#ref-1" class="cite-ref">[1]</a> (and its presentation in the Appendix of <em>Prime and Prejudice</em><a href="#ref-2" class="cite-ref">[2]</a>), recall that an odd composite integer \(n\) is a <strong>Carmichael number</strong> if it passes Fermat's primality test \(a^{n-1} \equiv 1 \pmod n\) for every base \(a\) coprime to \(n\). By <strong>Korselt's criterion</strong>, a square-free odd composite \(n = p_1 p_2 \cdots p_h\) is a Carmichael number if and only if:</p>
+    <div class="math-display">$$(p_i - 1) \mid (n - 1) \quad \text{for all } i \in \{1, \dots, h\}.$$</div>
+    <p>Why isn't every Carmichael number automatically a strong pseudoprime? Write \(n - 1 = 2^S D\) and \(p_i - 1 = 2^{s_i} d_i\) with \(D, d_i\) odd. By the Chinese Remainder Theorem, \(b^{2^r D} \equiv -1 \pmod n\) holds if and only if \(b^{2^r D} \equiv -1 \pmod{p_i}\) simultaneously for every prime factor \(p_i\). If two factors have different 2-adic valuations \(s_1 \neq s_2\), repeated squaring reaches \(+1 \pmod{p_1}\) while still at \(-1 \pmod{p_2}\), producing a non-trivial square root of unity modulo \(n\).</p>
+    <p>Arnault's method resolves this in the \(h = 3\) case (\(n = p_1 p_2 p_3\)) by choosing odd multipliers \(k_1 = 1 &lt; k_2 &lt; k_3\) and setting:</p>
+    <div class="math-display">$$p_i = k_i(p_1 - 1) + 1 \quad (i = 1, 2, 3), \qquad \left(\frac{b}{p_i}\right) = -1 \quad \forall b \in T.$$</div>
+    <p>Because \(k_2, k_3\) are odd, every \(p_i - 1\) is divisible by the exact same power of \(2\), so \(s_1 = s_2 = s_3 = s\). And because every \(b \in T\) is a quadratic non-residue modulo each \(p_i\), Euler's criterion gives \(b^{(p_i-1)/2} = b^{2^{s-1} d_i} \equiv -1 \pmod{p_i}\), forcing \(b^{2^{s-1} D} \equiv -1 \pmod n\) across all three primes at once!</p>
+
+    <details class="code-fold">
+      <summary><span>SageMath · Generating basis T and non-residue sets S<sub>b</sub></span><span>click to expand</span></summary>
+      <pre><code>def generate_basis(n):
+    return list(prime_range(1, n + 1))
+
+def Sb(T):
+    S = {}
+    for b in T:
+        S[b] = [p for p in range(3, 4 * b, 2) if kronecker_symbol(b, p) == -1]
+    return S</code></pre>
+    </details>
+
+    <p>Next, as suggested in <em>Prime and Prejudice</em><a href="#ref-2" class="cite-ref">[2]</a>, we choose two small primes \(k_2, k_3 \notin T\) such that the shifted intersection \(R_b\) in \(\mathbb{Z}/4b\mathbb{Z}\) is non-empty for every \(b \in T\):</p>
+    <div class="math-display">$$R_b := S_b \;\cap\; k_2^{-1}(S_b + k_2 - 1) \;\cap\; k_3^{-1}(S_b + k_3 - 1) \neq \emptyset \quad \forall b \in T.$$</div>
+    <p>Finally, Korselt's divisibility condition \((p_i - 1) \mid (p_1 p_2 p_3 - 1)\) reduces to two additional congruences on \(p_1\) modulo \(k_2\) and \(k_3\):</p>
+    <div class="math-display">$$p_1 \equiv -k_3^{-1} \pmod{k_2} \qquad \text{and} \qquad p_1 \equiv -k_2^{-1} \pmod{k_3}.$$</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <p class="panel-title">Arnault's construction, step by step</p>
+      <p class="hint">six steps — click a number or use the buttons</p>
+    </div>
+    <div class="steps-nav" id="steps-nav" role="group" aria-label="construction steps"></div>
+    <div id="step-body"></div>
+    <div class="step-foot">
+      <div class="unknown">
+        <div class="unknown-lab"><span>unresolved congruence constraints</span><span id="unk-val">198 moduli remaining</span></div>
+        <div class="unknown-track"><span class="unknown-fill" id="unk-fill" style="width:100%"></span></div>
+      </div>
+      <div class="navbtns">
+        <button type="button" class="navbtn" id="step-prev">← prev</button>
+        <button type="button" class="navbtn" id="step-next">next →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <h3>Eliminating CRT backtracking via Modulo-4 alignment</h3>
+    <p>Both the <em>Prime and Prejudice</em> article<a href="#ref-2" class="cite-ref">[2]</a> and other implementations known to the author perform multiple CRTs and “backtracking” to find a compatible common solution across \(R_b \subset \mathbb{Z}/4b\mathbb{Z}\), but a much easier approach is possible. Note that all of the moduli \(4b\) are pairwise coprime except for the factor \(4\) multiplying all of them. That means the residue modulo \(4\) is the <strong>only obstruction</strong> to finding a common solution: it suffices to select one element from each \(R_b\) such that they are all congruent to \(1 \pmod 4\) or all congruent to \(3 \pmod 4\). No CRTs are needed during this search.</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 680 240" role="img" aria-label="Comparison between recursive CRT backtracking and single-pass Modulo-4 filter">
+      <defs>
+        <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <polygon points="0,1 9,5 0,9" fill="currentColor"/>
+        </marker>
+        <marker id="ahm1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <polygon points="0,1 9,5 0,9" fill="#B5316B"/>
+        </marker>
+      </defs>
+
+      <text x="20" y="22" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" letter-spacing=".8">PRIOR IMPLEMENTATIONS — recursive CRT tree &amp; backtracking across 4b₁, 4b₂, …</text>
+      <g stroke="currentColor" stroke-width="1.3" fill="none" opacity=".7">
+        <circle cx="48" cy="68" r="5" fill="currentColor"/>
+        <line x1="53" y1="68" x2="145" y2="48" marker-end="url(#ah1)"/>
+        <line x1="53" y1="68" x2="145" y2="88" marker-end="url(#ah1)"/>
+        <circle cx="152" cy="48" r="4" fill="currentColor"/>
+        <circle cx="152" cy="88" r="4" fill="currentColor"/>
+        <line x1="156" y1="48" x2="248" y2="38" marker-end="url(#ah1)"/>
+        <line x1="156" y1="48" x2="248" y2="58" marker-end="url(#ah1)"/>
+        <line x1="156" y1="88" x2="248" y2="78" marker-end="url(#ah1)"/>
+        <line x1="156" y1="88" x2="248" y2="98" marker-end="url(#ah1)"/>
+      </g>
+      <text x="266" y="52" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".8">✗ gcd(4b₁, 4b₂) = 4 mismatch → backtrack tree</text>
+      <text x="266" y="88" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".8">✗ big-integer CRT recomputed at every node</text>
+
+      <line x1="20" y1="120" x2="660" y2="120" stroke="currentColor" stroke-width="1" opacity=".2"/>
+
+      <text x="20" y="146" font-family="IBM Plex Mono, monospace" font-size="11" fill="#B5316B" letter-spacing=".8">MOD-4 ALIGNMENT — linear filter x ≡ 3 (mod 4) across R<tspan dy="3" font-size="8.5">b</tspan><tspan dy="-3">, then ONE final CRT</tspan></text>
+      <g font-family="IBM Plex Mono, monospace" font-size="11">
+        <rect x="20" y="162" width="116" height="38" fill="none" stroke="#B5316B" stroke-width="1.4"/>
+        <text x="78" y="185" fill="#B5316B" text-anchor="middle">R<tspan dy="3" font-size="8.5">2</tspan><tspan dy="-3">: x ≡ 3 (4)</tspan></text>
+
+        <rect x="166" y="162" width="116" height="38" fill="none" stroke="#B5316B" stroke-width="1.4"/>
+        <text x="224" y="185" fill="#B5316B" text-anchor="middle">R<tspan dy="3" font-size="8.5">3</tspan><tspan dy="-3">: x ≡ 3 (4)</tspan></text>
+
+        <rect x="312" y="162" width="116" height="38" fill="none" stroke="#B5316B" stroke-width="1.4"/>
+        <text x="370" y="185" fill="#B5316B" text-anchor="middle">R<tspan dy="3" font-size="8.5">b</tspan><tspan dy="-3">: x ≡ 3 (4)</tspan></text>
+
+        <rect x="466" y="158" width="194" height="46" fill="none" stroke="#B5316B" stroke-width="1.8"/>
+        <text x="563" y="177" fill="#B5316B" text-anchor="middle" font-weight="600">SINGLE FINAL CRT</text>
+        <text x="563" y="194" fill="#B5316B" text-anchor="middle" font-size="10">p₁ ≡ r (mod M)</text>
+      </g>
+      <g stroke="#B5316B" stroke-width="1.4" fill="none" marker-end="url(#ahm1)">
+        <line x1="136" y1="181" x2="162" y2="181"/>
+        <line x1="282" y1="181" x2="308" y2="181"/>
+        <line x1="428" y1="181" x2="462" y2="181"/>
+      </g>
+      <text x="340" y="226" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" text-anchor="middle" opacity=".75">gcd(4bᵢ, 4bⱼ) = 4 for all i ≠ j  ⟹  matching mod 4 guarantees CRT compatibility</text>
+    </svg>
+    <figcaption><b>Why backtracking CRT is unnecessary.</b> Every modulus \(4b\) is four times a distinct prime, so their pairwise greatest common divisor is always \(4\). Picking one residue from each \(R_b\) in the same residue class modulo \(4\) guarantees that a single call to <code>crt()</code> succeeds at the end.</figcaption>
+  </figure>
+
+  <div class="col">
+    <details class="code-fold">
+      <summary><span>SageMath · Single-pass mod-4 congruence filter and final CRT</span><span>click to expand</span></summary>
+      <pre><code>def find_congruent(B, prefer_mod4=(3, 1)):
+    for r in prefer_mod4:
+        solution = []
+        for L in B.values():
+            found = next((x for x in L if x % 4 == r), None)
+            if found is None:
+                break
+            solution.append(found)
+        if len(solution) == len(B):
+            return solution
+    return None
+
+def Rt(T, k, S, S_base_sets=None):
+    B = {}
+    for b in T:
+        mod = 4 * b
+        inter = set(S_base_sets[b]) if S_base_sets is not None else set(S[b])
+        for i in range(2, h + 1):
+            ki = k[i]
+            inv = inverse_mod(ki, mod)
+            inter &amp;= {(inv * (s + ki - 1)) % mod for s in S[b]}
+            if not inter:
+                break
+        B[b] = sorted(inter)
+    return B
+
+x2 = inverse_mod(-k[3], k[2])
+x3 = inverse_mod(-k[2], k[3])
+r = crt(candidate_sol + [x2, x3], [i * 4 for i in T] + [k[2], k[3]])
+mod = 4 * prod(T) * k[2] * k[3]</code></pre>
+    </details>
+  </div>
+</section>
+
+<section id="sieve">
+  <div class="col">
+    <h2><span class="idx">03 · Finding the Three Primes: The Sieve</span>Eliminating three residue progressions per prime</h2>
+    <p>Finding a prime \(p_1 \equiv r \pmod M\) such that \(p_2 = k_2(p_1 - 1) + 1\) and \(p_3 = k_3(p_1 - 1) + 1\) are also prime is by far the most expensive part of our algorithm, both in terms of time and memory. Naively trying \(p_1 = r + jM\) for each \(j \in \mathbb{N}\) wastes almost all of its time running big-integer primality tests on candidates that are divisible by small primes just above \(t\).</p>
+    <p>Let \(S\) be a set of small primes such that \(S \cap (T \cup \{k_2, k_3\}) = \emptyset\), and set \(A_i := k_i(r - 1) + 1\) for \(i = 2, 3\), so that \(p_i = A_i + k_i M j\). Then for any sieve prime \(q \in S\), divisibility of \(p_1, p_2, p_3\) by \(q\) translates into three linear congruences on the index \(j\):</p>
+    <div class="math-display">$$\begin{aligned} q \mid p_1 &\iff j \equiv -rM^{-1} \pmod q, \\ q \mid p_2 &\iff j \equiv -A_2(k_2 M)^{-1} \pmod q, \\ q \mid p_3 &\iff j \equiv -A_3(k_3 M)^{-1} \pmod q. \end{aligned}$$</div>
+    <p>We can save redundant modular reductions by setting \(b_1 := -rM^{-1} \pmod q\) and \(d_i := (1 - k_i^{-1})M^{-1} \pmod q\):</p>
+    <div class="math-display">$$b_1 = -rM^{-1} \pmod q, \qquad b_2 = b_1 + d_2 \pmod q, \qquad b_3 = b_1 + d_3 \pmod q.$$</div>
+    <p>Thus for each interval of length \(q\), we eliminate up to three indices \(b_1, b_2, b_3 \pmod q\). By making the sieve <strong>segmented</strong> in blocks of length \(L\), we quadratically reduce memory complexity while scanning surviving <code>1</code>-bytes at C speed via <code>good.find(1, i + 1)</code>.</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 680 220" role="img" aria-label="Segmented bytearray sieve eliminating three arithmetic progressions b1, b2, b3 modulo each prime q > t">
+      <text x="20" y="22" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" letter-spacing=".8">SEGMENT [k₀, k₀ + L) — 3 residue progressions eliminated per prime q ∈ (t, B]</text>
+      <g transform="translate(20, 38)">
+        <rect x="0" y="0" width="640" height="36" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/>
+        <g stroke="currentColor" stroke-width="1" opacity=".2">
+          <line x1="32" y1="0" x2="32" y2="36"/><line x1="64" y1="0" x2="64" y2="36"/><line x1="96" y1="0" x2="96" y2="36"/>
+          <line x1="128" y1="0" x2="128" y2="36"/><line x1="160" y1="0" x2="160" y2="36"/><line x1="192" y1="0" x2="192" y2="36"/>
+          <line x1="224" y1="0" x2="224" y2="36"/><line x1="256" y1="0" x2="256" y2="36"/><line x1="288" y1="0" x2="288" y2="36"/>
+          <line x1="320" y1="0" x2="320" y2="36"/><line x1="352" y1="0" x2="352" y2="36"/><line x1="384" y1="0" x2="384" y2="36"/>
+          <line x1="416" y1="0" x2="416" y2="36"/><line x1="448" y1="0" x2="448" y2="36"/><line x1="480" y1="0" x2="480" y2="36"/>
+          <line x1="512" y1="0" x2="512" y2="36"/><line x1="544" y1="0" x2="544" y2="36"/><line x1="576" y1="0" x2="576" y2="36"/>
+          <line x1="608" y1="0" x2="608" y2="36"/>
+        </g>
+        <g fill="#B5316B" opacity=".22">
+          <rect x="32" y="0" width="32" height="36"/><rect x="256" y="0" width="32" height="36"/><rect x="480" y="0" width="32" height="36"/>
+          <rect x="96" y="0" width="32" height="36"/><rect x="320" y="0" width="32" height="36"/><rect x="544" y="0" width="32" height="36"/>
+          <rect x="160" y="0" width="32" height="36"/><rect x="384" y="0" width="32" height="36"/><rect x="608" y="0" width="32" height="36"/>
+        </g>
+        <g fill="#3D5A80" opacity=".22">
+          <rect x="0" y="0" width="32" height="36"/><rect x="192" y="0" width="32" height="36"/><rect x="416" y="0" width="32" height="36"/><rect x="576" y="0" width="32" height="36"/>
+        </g>
+        <g font-family="IBM Plex Mono, monospace" font-size="10.5" text-anchor="middle">
+          <text x="16" y="22" fill="#3D5A80" font-weight="600">1</text>
+          <text x="48" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">1</tspan></text>
+          <text x="112" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">2</tspan></text>
+          <text x="176" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">3</tspan></text>
+          <text x="208" y="22" fill="#3D5A80" font-weight="600">1</text>
+          <text x="272" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">1</tspan></text>
+          <text x="336" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">2</tspan></text>
+          <text x="400" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">3</tspan></text>
+          <text x="432" y="22" fill="#3D5A80" font-weight="600">1</text>
+          <text x="496" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">1</tspan></text>
+          <text x="560" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">2</tspan></text>
+          <text x="592" y="22" fill="#3D5A80" font-weight="600">1</text>
+          <text x="624" y="22" fill="#B5316B">b<tspan dy="2" font-size="8">3</tspan></text>
+        </g>
+      </g>
+      <path d="M68 78 Q180 108 292 78" fill="none" stroke="#B5316B" stroke-width="1.3" marker-end="url(#ahm1)"/>
+      <path d="M292 78 Q404 108 516 78" fill="none" stroke="#B5316B" stroke-width="1.3" marker-end="url(#ahm1)"/>
+      <text x="340" y="122" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#B5316B" text-anchor="middle">good[i::q] = zero_buf[:n] — stride-q slice assignment per residue b₁, b₂, b₃</text>
+
+      <line x1="36" y1="154" x2="612" y2="154" stroke="#3D5A80" stroke-width="1.4" stroke-dasharray="4 3"/>
+      <circle cx="36" cy="154" r="4.5" fill="#3D5A80"/><circle cx="228" cy="154" r="4.5" fill="#3D5A80"/>
+      <circle cx="452" cy="154" r="4.5" fill="#3D5A80"/><circle cx="612" cy="154" r="4.5" fill="#3D5A80"/>
+      <text x="340" y="180" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="#3D5A80" text-anchor="middle">i = good.find(1, i + 1) — jumps directly between surviving 1-bytes via C memchr</text>
+      <text x="340" y="202" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".7" text-anchor="middle">surviving fraction after sieving q ∈ (t, t²] is (ln t / ln t²)³ = (1/2)³ = 12.5%</text>
+    </svg>
+    <figcaption><b>Three progressions per prime, zeroed by slice assignment.</b> Each prime \(q \in (t, B]\) strikes out three arithmetic progressions \(b_1, b_2, b_3 \pmod q\) corresponding to \(q \mid p_1\), \(q \mid p_2\), and \(q \mid p_3\). Scanning survivors with <code>bytearray.find(1)</code> skips zeroed runs in native C.</figcaption>
+  </figure>
+
+  <div class="col">
+    <div class="aside">
+      <b>Why Pritchard's wheel sieve does not consistently beat the segmented sieve.</b> Because all primes \(p \le t\) are already factors of \(M\), our sieve begins at the first prime \(q &gt; t\) (e.g. \(q = 1201\)), where each prime eliminates three residue classes. Building a dynamic wheel over primes \(q &gt; t\) requires tracking \(3^k\) irregular gaps across huge periods \(\prod q_i\), losing the contiguous stride that makes <code>good[i::q] = zero_buf[:n]</code> fast and causing performance to fluctuate randomly with \(t\).
+    </div>
+
+    <details class="code-fold">
+      <summary><span>SageMath · Segmented bytearray sieve with pre-allocated zero buffer</span><span>click to expand</span></summary>
+      <pre><code>def prepare_sieve(M, r, k2, k3, t, B):
+    data = []
+    for q in prime_range(t + 1, B + 1):
+        if q == k2 or q == k3:
+            continue
+        invM = inverse_mod(M, q)
+        invk2 = inverse_mod(k2, q)
+        invk3 = inverse_mod(k3, q)
+
+        b1 = (-r * invM) % q
+        b2 = (b1 + (1 - invk2) * invM) % q
+        b3 = (b1 + (1 - invk3) * invM) % q
+
+        data.append((q, tuple({b1, b2, b3})))
+    return data
+
+def sieve_block(k0, L, data, zero_buf):
+    good = bytearray(b'\x01') * L
+    for q, residues in data:
+        for b in residues:
+            i = (b - k0) % q
+            if i &lt; L:
+                n = (L - 1 - i) // q + 1
+                good[i::q] = zero_buf[:n]
+    return good</code></pre>
+    </details>
+  </div>
+</section>
+
+<section id="primality">
+  <div class="col">
+    <h2><span class="idx">04 · Primality Testing</span>Quadratic reciprocity, Mod-8 selection &amp; the Strong Lucas test</h2>
+    <p>Once a candidate index \(j\) survives the sieve, we test \(p_1, p_2, p_3\) for probable primality. Sage's built-in <code>is_pseudoprime()</code> calls PARI/GP's <strong>Baillie–PSW</strong> test<a href="#ref-3" id="cite-3a" class="cite-ref">[3]</a>, which consists of three steps: trial division by primes \(&lt; 101\) (redundant after our sieve), a base-2 Miller–Rabin test, and an almost-extra-strong Lucas test.</p>
+    <p>We can make the base-2 Miller–Rabin step significantly faster by combining <strong>Euler's criterion</strong> with the <strong>second supplement to Quadratic Reciprocity</strong>. For any odd prime \(p = 2^s d + 1\) (\(d\) odd), the Legendre symbol \(\left(\frac{2}{p}\right)\) fixes the sign of \(2^{(p-1)/2} = 2^{2^{s-1} d} \pmod p\) according to \(p \bmod 8\):</p>
+    <div class="math-display">$$2^{2^{s-1}d} \equiv \left(\frac{2}{p}\right) = (-1)^{(p^2-1)/8} \equiv \begin{cases} +1 \pmod p & \text{if } p \equiv 1, 7 \pmod 8, \\ -1 \pmod p & \text{if } p \equiv 3, 5 \pmod 8. \end{cases}$$</div>
+    <p>This yields four specialized cases depending on \(p \bmod 8\), which is already fixed before the sieve loop begins:</p>
+    <div class="math-display">$$\begin{aligned} p \equiv 1 \pmod 8 &\implies s \ge 3, \quad 2^d \equiv 1 \pmod p \;\text{ or }\; 2^{2^r d} \equiv -1 \pmod p \;\;\text{for some } 0 \le r \le s-2, \\ p \equiv 3 \pmod 8 &\implies s = 1, \quad 2^d = 2^{(p-1)/2} \equiv -1 \pmod p, \\ p \equiv 5 \pmod 8 &\implies s = 2, \quad 2^{2d} = 2^{(p-1)/2} \equiv -1 \pmod p, \\ p \equiv 7 \pmod 8 &\implies s = 1, \quad 2^d = 2^{(p-1)/2} \equiv +1 \pmod p. \end{aligned}$$</div>
+    <p>Therefore, the “full” Miller–Rabin squaring loop is only needed when \(p \equiv 1 \pmod 8\) (and only up to \(r = s - 2\)). In the other three cases, \(s\) is known in advance (\(s = 1\) for \(3, 7 \pmod 8\) and \(s = 2\) for \(5 \pmod 8\)), so only a single congruence needs to be checked without even calling <code>d.valuation(2)</code>!</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 680 225" role="img" aria-label="Decision tree for Base-2 Miller-Rabin by residue class modulo 8 using quadratic reciprocity">
+      <text x="20" y="22" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" letter-spacing=".8">QUADRATIC RECIPROCITY DISPATCH — determined once before the sieve loop</text>
+      <rect x="220" y="36" width="240" height="36" fill="none" stroke="currentColor" stroke-width="1.4"/>
+      <text x="340" y="58" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" text-anchor="middle">pᵢ mod 8 (fixed by r and kᵢ mod 8)</text>
+
+      <g stroke="currentColor" stroke-width="1.2" fill="none" opacity=".6">
+        <path d="M265 72 L95.5 114"/>
+        <path d="M315 72 L258.5 114"/>
+        <path d="M365 72 L421.5 114"/>
+        <path d="M415 72 L584.5 114"/>
+      </g>
+
+      <rect x="20" y="114" width="151" height="90" fill="none" stroke="#B5316B" stroke-width="1.7"/>
+      <text x="95.5" y="135" font-family="IBM Plex Mono, monospace" font-size="11" fill="#B5316B" font-weight="600" text-anchor="middle">p ≡ 3 (mod 8)</text>
+      <text x="95.5" y="153" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">(2/p) = −1, s = 1</text>
+      <text x="95.5" y="171" font-family="IBM Plex Mono, monospace" font-size="10" fill="#B5316B" text-anchor="middle">2^((p−1)≫1) ≡ −1</text>
+      <text x="95.5" y="190" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity=".7" text-anchor="middle">0 loops · no valuation</text>
+
+      <rect x="183" y="114" width="151" height="90" fill="none" stroke="#3D5A80" stroke-width="1.5"/>
+      <text x="258.5" y="135" font-family="IBM Plex Mono, monospace" font-size="11" fill="#3D5A80" font-weight="600" text-anchor="middle">p ≡ 5 (mod 8)</text>
+      <text x="258.5" y="153" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">(2/p) = −1, s = 2</text>
+      <text x="258.5" y="171" font-family="IBM Plex Mono, monospace" font-size="10" fill="#3D5A80" text-anchor="middle">(2^d)² ≡ −1 (mod p)</text>
+      <text x="258.5" y="190" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity=".7" text-anchor="middle">1 square · no valuation</text>
+
+      <rect x="346" y="114" width="151" height="90" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".75"/>
+      <text x="421.5" y="135" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" text-anchor="middle">p ≡ 7 (mod 8)</text>
+      <text x="421.5" y="153" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">(2/p) = +1, s = 1</text>
+      <text x="421.5" y="171" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">2^((p−1)≫1) ≡ +1</text>
+      <text x="421.5" y="190" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity=".7" text-anchor="middle">excluded when 2 ∈ T</text>
+
+      <rect x="509" y="114" width="151" height="90" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3" opacity=".65"/>
+      <text x="584.5" y="135" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" text-anchor="middle">p ≡ 1 (mod 8)</text>
+      <text x="584.5" y="153" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">(2/p) = +1, s ≥ 3</text>
+      <text x="584.5" y="171" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" text-anchor="middle">loop r ≤ s−2 + sq chk</text>
+      <text x="584.5" y="190" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" opacity=".7" text-anchor="middle">excluded when 2 ∈ T</text>
+    </svg>
+    <figcaption><b>Why \(2 \in T\) and mod-4 ordering avoid the slow branches.</b> Since \(b = 2 \in T\) restricts \(S_2 = \{3, 5\} \pmod 8\), none of \(p_1, p_2, p_3\) can land in \(1\) or \(7 \pmod 8\). Prioritizing \(k_2 \equiv k_3 \equiv 1 \pmod 4\) and \(r \equiv 3 \pmod 4\) places all three primes in \(3 \pmod 8\).</figcaption>
+  </figure>
+
+  <div class="col">
+    <h3>Selecting \(k_2, k_3\) so that \(p_i \not\equiv 1 \pmod 8\)</h3>
+    <p>Notice that because \(2 \in T\), the first set of non-quadratic residues is \(S_2 = \{3, 5\} \pmod 8\), which means \(r \bmod 8 = \texttt{candidate\_sol[0]} \in \{3, 5\}\) automatically! Even better, by partitioning our supplemental primes so that \(k_2 \equiv k_3 \equiv 1 \pmod 4\) are tried first and checking \(r \equiv 3 \pmod 4\) before \(1 \pmod 4\), we ensure \(p_1 \equiv p_2 \equiv p_3 \equiv 3 \pmod 8\), where every candidate test is a single modular exponentiation <code>pow(2, (p - 1) &gt;&gt; 1, p) == p - 1</code>.</p>
+
+    <details class="code-fold">
+      <summary><span>SageMath · Quadratic-reciprocity MR-2 dispatch without inner-loop valuation(2)</span><span>click to expand</span></summary>
+      <pre><code>def MR_3(p):
+    # p == 3 mod 8 =&gt; s = 1 always, d = (p - 1) &gt;&gt; 1, and (2/p) = -1
+    return pow(2, (p - 1) &gt;&gt; 1, p) == p - 1
+
+def MR_5(p):
+    # p == 5 mod 8 =&gt; s = 2 always, d = (p - 1) &gt;&gt; 2, and (2/p) = -1
+    d = (p - 1) &gt;&gt; 2
+    x = pow(2, d, p)
+    return (x * x) % p == p - 1
+
+def MR_7(p):
+    return pow(2, (p - 1) &gt;&gt; 1, p) == 1
+
+def MR_1_checked(p):
+    d = p - 1
+    s = d.valuation(2)
+    d &gt;&gt;= s
+    x = pow(2, d, p)
+    if x == 1 or x == p - 1:
+        return not p.is_square()
+    for _ in range(s - 3):
+        x = (x * x) % p
+        if x == p - 1:
+            return not p.is_square()
+    return False</code></pre>
+    </details>
+
+    <h3>The Strong Lucas test — and why omitting it in the hot loop is faster</h3>
+    <p>In the Baillie–PSW test, base-2 Miller–Rabin is paired with a <strong>Strong Lucas probable prime test</strong>. Using Selfridge's method, we pick the first discriminant \(D \in \{5, -7, 9, -11, 13, \dots\}\) for which the Jacobi symbol \(\left(\frac{D}{n}\right) = -1\), and set \(P = 1, Q = (1 - D)/4\) (or \(P = Q = 5\) if \(D = 5\)). The companion Lucas sequences \(U_k, V_k\) are defined by \(U_0 = 0, U_1 = 1, V_0 = 2, V_1 = P\) and:</p>
+    <div class="math-display">$$U_{j+2} = P U_{j+1} - Q U_j, \qquad V_{j+2} = P V_{j+1} - Q V_j.$$</div>
+    <p>Writing \(n + 1 = 2^{s'} d'\) with \(d'\) odd, the Strong Lucas test accepts \(n\) if and only if:</p>
+    <div class="math-display">$$U_{d'} \equiv 0 \pmod n \quad \text{or} \quad V_{2^r d'} \equiv 0 \pmod n \quad \text{for some } 0 \le r &lt; s'.$$</div>
+    <p>While Miller–Rabin operates in \(\mathbb{F}_p^\times\) of order \(p - 1\), the Lucas test operates in the norm-1 subgroup of \(\mathbb{F}_{p^2}^\times\) of order \(p + 1\), making the two tests algebraically orthogonal. However, advancing the binary Lucas state \((U_k, V_k, Q^k) \bmod n\) is roughly \(3\times\) more expensive than a base-2 Miller–Rabin test, and high confidence of primality inside the sieve loop is unnecessary because we test the final product \(n = p_1 p_2 p_3\) against all bases in \(T\) at the end anyway. Ignoring the Lucas test in the inner loop yields a substantially faster program.</p>
+
+    <details class="code-fold">
+      <summary><span>SageMath · Strong Lucas test with Selfridge parameters (for experimentation)</span><span>click to expand</span></summary>
+      <pre><code>SELFRIDGE_D = tuple((-1) ** i * (2 * i + 5) for i in range(20))
+
+def selfridge_D(n):
+    n = Integer(n)
+    for D in SELFRIDGE_D:
+        if kronecker_symbol(D, n) == -1:
+            return Integer(D)
+    return Integer(45)
+
+def lucas_uv(n, k, P, Q):
+    D = P * P - 4 * Q
+    inv2 = inverse_mod(2, n)
+    U, V, Qk = Integer(1), P % n, Q % n
+    for bit in bin(k)[3:]:
+        U2 = (U * V) % n
+        V2 = (V * V - 2 * Qk) % n
+        Q2 = (Qk * Qk) % n
+        if bit == '0':
+            U, V, Qk = U2, V2, Q2
+        else:
+            U = ((P * U2 + V2) * inv2) % n
+            V = ((D * U2 + P * V2) * inv2) % n
+            Qk = (Q2 * Q) % n
+    return U, V, Qk</code></pre>
+    </details>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <p class="panel-title">Relative search cost — log<sub>2</sub> normalized work (t = 1200), lower is better</p>
+      <div class="scaletoggle" role="group" aria-label="chart scale">
+        <button type="button" id="sc-full" aria-pressed="true">full range</button>
+        <button type="button" id="sc-zoom" aria-pressed="false">zoom Python → C/GMP</button>
+      </div>
+    </div>
+    <div class="ladder" id="ladder" role="group" aria-label="optimization lineage"></div>
+    <div class="readout" id="readout"></div>
+  </div>
+</section>
+
+<section id="asymptotics">
+  <div class="col">
+    <h2><span class="idx">05 · Asymptotic Heuristics</span>Chebyshev's function, Mertens' theorem &amp; optimal sieving</h2>
+    <p>To find the optimal parameters for the sieve, let us estimate the size of \(M\) and of our final pseudoprime with respect to the input bound \(t\). By definition:</p>
+    <div class="math-display">$$M = 4 \cdot k_2 \cdot k_3 \cdot \prod_{p \le t} p.$$</div>
+    <p>Taking natural logarithms gives:</p>
+    <div class="math-display">$$\ln(M) = \vartheta(t) + \ln(4) + \ln(k_2) + \ln(k_3), \qquad \text{where } \vartheta(t) := \sum_{p \le t} \ln(p)$$</div>
+    <p>is <strong>Chebyshev's first function</strong>. Using the Prime Number Theorem asymptotic \(\vartheta(t) \sim t\), we obtain \(M \sim e^{(1+o(1))t}\), so the number of decimal digits of \(M\) is roughly \(\log_{10}(e) \cdot t \approx 0.434\,t\). A single Miller–Rabin test on a number with \(\Theta(t)\) digits has time complexity \(\tilde{O}(t^2)\) using FFT-based multiplication.</p>
+    <p>Now consider the cost of sieving over all primes \(t &lt; q \le B\). Since each prime \(q\) eliminates \(3\) residue classes out of \(q\), the fraction of surviving candidates after the sieve is given by:</p>
+    <div class="math-display">$$s(t, B) := \prod_{t &lt; q \le B} \left(1 - \frac{3}{q}\right).$$</div>
+    <p>For each prime \(q &gt; 3\), expanding the cube shows that:</p>
+    <div class="math-display">$$0 &lt; \left(1 - \frac{3}{q}\right) &lt; \left(1 - \frac{1}{q}\right)^3, \qquad \text{since } \left(1 - \frac{1}{q}\right)^3 - \left(1 - \frac{3}{q}\right) = \frac{3}{q^2} - \frac{1}{q^3} &gt; 0.$$</div>
+    <p>Taking products and applying <strong>Mertens' third theorem</strong>:</p>
+    <div class="math-display">$$0 \le \lim_{n \to \infty} \ln(n)^3 \prod_{q \le n} \left(1 - \frac{3}{q}\right) \le \lim_{n \to \infty} \ln(n)^3 \prod_{q \le n} \left(1 - \frac{1}{q}\right)^3 = e^{-3\gamma},$$</div>
+    <p>which implies \(\prod_{q \le n} (1 - 3/q) \sim c_0 \ln(n)^{-3}\), and therefore:</p>
+    <div class="math-display">$$s(t, B) = \frac{\prod_{q \le B} \left(1 - \frac{3}{q}\right)}{\prod_{q \le t} \left(1 - \frac{3}{q}\right)} \sim \left(\frac{\ln(t)}{\ln(B)}\right)^3.$$</div>
+    <p>Setting \(B = t^a\) (or \(B = c \cdot t^a\) with constant multiplier \(c &gt; 0\)), the survivor fraction is \(s(t, t^a) \sim 1/a^3\). Sieving up to \(B = t^a\) takes \(\tilde{O}(t^a)\) time, whereas testing the surviving candidates takes \(\tilde{O}(t^2 / a^3)\) time. Minimizing total runtime requires balancing these two costs:</p>
+    <div class="math-display">$$t^a \approx \frac{t^2}{a^3} \quad \implies \quad a \approx 2 - \frac{3\ln a}{\ln t} \lesssim 2.$$</div>
+    <p>Since \(a\) is much smaller than \(t\), the optimal exponent is \(a \approx 2\), so we sieve over primes up to roughly \(B \approx c \cdot t^2\).</p>
+    <h3>Theory vs. Practice: Why the bare equation gives a &lt; 2, yet experiments favor B ≈ 10 t²</h3>
+    <p>A closer look at the total work function reveals an instructive subtlety between pure \(\tilde{O}(\cdot)\) asymptotics and empirical runtime:</p>
+    <ul>
+      <li><strong>Marginal return of the bare asymptotic sum:</strong> If we strip away constant and logarithmic factors and minimize the bare sum \(W_{\text{bare}}(a) = t^a + t^2 / a^3\) by setting \(\frac{dW}{da} = 0\), we obtain \((\ln t)\, t^a = \frac{3}{a} \cdot \frac{t^2}{a^3}\), or \(t^{a-2} = \frac{3}{a^4 \ln t} \ll 1\). Because sieve cost grows <em>exponentially</em> in \(a\) (with derivative factor \(\ln t\)) whereas the Mertens survivor fraction \(1/a^3\) decays only <em>polynomially</em> (with derivative factor \(3/a\)), unit constants place the minimum strictly below \(a = 2\) (where sieve work is roughly \(\frac{3}{a \ln t} \approx \frac{1}{5}\) of the primality test work).</li>
+      <li><strong>Why real SageMath runs peak around \(a = 2, c \approx 10\) (\(B \approx 10\,t^2\)):</strong> In practice, \(\tilde{O}(\cdot)\) hides a large constant-factor asymmetry \(K = C_{\text{MR}} / C_{\text{sieve}} \gg 1\). First, the sieve only iterates over <em>primes</em> \(q \le B\), of which there are \(\pi(B) \sim \frac{B}{a \ln t}\), and each inner sieve step is a fast C <code>bytearray</code> slice assignment (<code>memcpy</code>). Second, every surviving candidate must execute multi-precision modular exponentiation <code>pow(2, (p1 - 1) &gt;&gt; 1, p1)</code> on a \(\Theta(t)\)-bit integer (\(\sim 1{,}730\) squarings at \(t = 1200\)) across all candidates searched until \(p_1, p_2, p_3\) are simultaneously prime.</li>
+    </ul>
+    <p>Including prime density \(\pi(B) \sim \frac{B}{\ln B}\) and the empirical per-survivor cost ratio \(K \approx 100\), the derivative condition \(\frac{dW}{dB} = 0\) for \(B = c \cdot t^a = t^\alpha\) (where \(\alpha = a + \frac{\ln c}{\ln t}\)) yields:</p>
+    <div class="math-display">$$W(B) \propto \frac{c \cdot t^a}{\alpha} + \frac{K \cdot t^2}{\alpha^3} \quad \implies \quad B_{\text{opt}} \approx \frac{3K}{\alpha^2(\alpha \ln t - 1)} \, t^2.$$</div>
+    <p>For practical sizes \(t \in [256, 10000]\), the prefactor \(\frac{3K}{\alpha^2(\alpha \ln t - 1)}\) evaluates to roughly \(5 \text{ to } 10\), explaining why \(B \approx 10\,t^2\) (\(a = 2, c \approx 10\), or \(a \approx 2.2\) when \(c = 1\)) is optimal in actual runs, while as \(t \to \infty\) the \(\ln t\) denominator eventually dominates and pulls \(\alpha_{\text{opt}} \to 2^-\).</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <p class="panel-title">The sieve bound tradeoff — B = c · t<sup>a</sup></p>
+      <div class="scaletoggle" id="t-presets" role="group" aria-label="Basis bound t">
+        <button type="button" data-t="256" aria-pressed="false">t = 256</button>
+        <button type="button" data-t="600" aria-pressed="false">t = 600</button>
+        <button type="button" data-t="1200" aria-pressed="true">t = 1,200</button>
+        <button type="button" data-t="2500" aria-pressed="false">t = 2,500</button>
+        <button type="button" data-t="5000" aria-pressed="false">t = 5,000</button>
+        <button type="button" data-t="10000" aria-pressed="false">t = 10,000</button>
+      </div>
+    </div>
+    <div class="slider-grid">
+      <div class="slider-row">
+        <div class="slider-control-group" style="margin-bottom:6px;margin-top:0">
+          <div class="slider-label-line"><span>Basis bound t (primes b ≤ t)</span><span id="lbl-t">t = 1,200</span></div>
+          <input type="range" id="tslider" min="100" max="10000" step="50" value="1200" aria-label="prime basis bound t">
+          <div class="slider-caps"><span>t = 100</span><span>t = 1,200</span><span>t = 10,000</span></div>
+        </div>
+        <svg id="bchart" viewBox="0 0 520 195" role="img" aria-label="Asymptotic total work curve as a function of the sieve exponent a and constant c"></svg>
+        <div class="slider-control-group">
+          <div class="slider-label-line"><span>Exponent a (in B = c · tᵃ)</span><span id="lbl-a">a = 2.00</span></div>
+          <input type="range" id="aslider" min="1.0" max="3.5" step="0.05" value="2.0" aria-label="sieve exponent a">
+          <div class="slider-caps"><span>a = 1.0</span><span>a ≈ 2.0 (optimal)</span><span>a = 3.5</span></div>
+        </div>
+        <div class="slider-control-group">
+          <div class="slider-label-line"><span>Constant multiplier c (0.1 to 10.0, default c = 1.0 ⇒ B = tᵃ)</span><span id="lbl-c">c = 1.0</span></div>
+          <input type="range" id="cslider" min="0.1" max="10.0" step="0.1" value="1.0" aria-label="sieve constant multiplier c">
+          <div class="slider-caps"><span>c = 0.1</span><span>c = 1.0 (pure B = tᵃ)</span><span>c = 10.0</span></div>
+        </div>
+      </div>
+      <div class="dstat">
+        <div class="dstat-row"><span class="dstat-k" id="k-t">basis bound t (pseudoprime ≈ 1,570 digits)</span><span class="dstat-v" id="b-t">t = 1,200</span></div>
+        <div class="dstat-row"><span class="dstat-k" id="k-bound">sieve bound B = t<sup>a</sup></span><span class="dstat-v" id="b-bound">1.44 × 10<sup>6</sup></span></div>
+        <div class="dstat-row"><span class="dstat-k">survivor rate s(t, B) ≈ (ln t / ln B)<sup>3</sup></span><span class="dstat-v" id="b-surv">12.50%</span></div>
+        <div class="dstat-row"><span class="dstat-k" id="k-sieve">sieve work ~ t<sup>a</sup></span><span class="dstat-v" id="b-sieve">10<sup>6.16</sup></span></div>
+        <div class="dstat-row"><span class="dstat-k">MR-2 test work ~ t<sup>2</sup> · s(t, B)</span><span class="dstat-v" id="b-prim">10<sup>6.16</sup></span></div>
+        <div class="dstat-row" style="border-top:1.5px solid var(--ink);padding-top:9px;margin-top:2px"><span class="dstat-k" style="color:var(--ink);font-weight:600">final total work (sieve + MR-2)</span><span class="dstat-v" id="b-total" style="font-size:15px">10<sup>6.46</sup></span></div>
+        <div class="verdict ok" id="b-verdict">Optimal balance (t = 1,200, a = 2.00, c = 1.0). Sieve cost and survivor primality testing are asymptotically matched.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <details class="code-fold">
+      <summary><span>SageMath · Complete inner search loop with B = t² and C-speed .find(1)</span><span>click to expand</span></summary>
+      <pre><code>test_p1 = MR_DISPATCH[ourcase[0]]
+test_p2 = MR_DISPATCH[ourcase[1]]
+test_p3 = MR_DISPATCH[ourcase[2]]
+
+def find_triple(M, r, k2, k3, t, B=t ** 2, block_size=t ** 2):
+    data = prepare_sieve(M, r, k2, k3, t, B)
+    zero_buf = bytes(block_size)
+
+    A2 = k2 * (r - 1) + 1
+    A3 = k3 * (r - 1) + 1
+    M2 = k2 * M
+    M3 = k3 * M
+
+    k0 = 0
+    while True:
+        good = sieve_block(k0, block_size, data, zero_buf)
+        i = good.find(1)
+        while i != -1:
+            j = k0 + i
+            p1 = r + j * M
+            if test_p1(p1):
+                p2 = A2 + j * M2
+                if test_p2(p2):
+                    p3 = A3 + j * M3
+                    if test_p3(p3):
+                        pseudoprime = p1 * p2 * p3
+                        if miller_rabin(pseudoprime):
+                            return p1, p2, p3, pseudoprime
+            i = good.find(1, i + 1)
+        k0 += block_size</code></pre>
+    </details>
+  </div>
+</section>
+
+<section id="future">
+  <div class="col">
+    <h2><span class="idx">06 · Final Remarks</span>Porting to C, PARI/GP, GMP &amp; multithreading</h2>
+    <p>While our algorithmic optimizations bring the SageMath program down to a few seconds, Python remains slower than C for tight inner loops. Porting the search to C using <strong>PARI/GP</strong><a href="#ref-3" class="cite-ref">[3]</a> or <strong>GNU MP (GMP)</strong> unlocks two further optimizations:</p>
+    <ul>
+      <li><strong>Native C / GMP limb arithmetic:</strong> Different implementations of Baillie–PSW use slightly different variants of the Lucas test (see PARI/GP's <code>basemath/prime.c</code><a href="#ref-3" class="cite-ref">[3]</a>). Even better, GMP's low-level <code>mpz_powm_ui</code> and <code>mpn_</code> functions operate on pre-allocated limb buffers without heap allocation, and base-2 modular exponentiation replaces general multi-precision multiplications with 1-bit shifts.</li>
+      <li><strong>Multithreaded segmented sieving:</strong> Because each segmented block \([k_0, k_0 + L)\) only reads from the shared precomputed sieve table <code>data</code>, worker threads in C (via OpenMP or <code>pthreads</code>) can sieve and test disjoint blocks in parallel with near-linear speedup.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="col">
+    <p class="rule-lab">References</p>
+    <ol class="bib-list">
+      <li class="bib-item" id="ref-1">
+        <span class="bib-num">[1]</span>
+        <div class="bib-body">
+          <b>François Arnault</b>, <em>Constructing Carmichael Numbers which are Strong Pseudoprimes to Several Bases</em>, Journal of Symbolic Computation, Vol. 20, Issue 2, pp. 151–161 (1995).
+          <a href="https://doi.org/10.1006/jsco.1995.1042" target="_blank" rel="noreferrer">doi:10.1006/jsco.1995.1042 ↗</a>
+          <a href="#cite-1a" title="Jump back to text">↩</a>
+        </div>
+      </li>
+      <li class="bib-item" id="ref-2">
+        <span class="bib-num">[2]</span>
+        <div class="bib-body">
+          <b>Martin R. Albrecht, Jake Massimo, Kenneth G. Paterson, and Juraj Somorovsky</b>, <em>Prime and Prejudice: Primality Testing Under Adversarial Conditions</em>, Proceedings of the 2018 ACM SIGSAC Conference on Computer and Communications Security (CCS '18), pp. 281–298 (2018).
+          <a href="https://doi.org/10.1145/3243734.3243787" target="_blank" rel="noreferrer">doi:10.1145/3243734.3243787 ↗</a>
+          <a href="#cite-2a" title="Jump back to text">↩</a>
+        </div>
+      </li>
+      <li class="bib-item" id="ref-3">
+        <span class="bib-num">[3]</span>
+        <div class="bib-body">
+          <b>The PARI Group</b>, <em>PARI/GP — src/basemath/prime.c</em> (<code>BPSW_psp</code>, <code>millerrabin</code>, and Lucas probable prime implementations across versions), Bordeaux.
+          <a href="https://pari.math.u-bordeaux.fr/lcov-report/basemath/prime.c.func.html" target="_blank" rel="noreferrer">pari.math.u-bordeaux.fr ↗</a>
+          <a href="#cite-3a" title="Jump back to text">↩</a>
+        </div>
+      </li>
+    </ol>
+    <div style="margin-top:26px;padding:14px 18px;border:1px solid var(--rule);background:var(--surface);font-size:14.5px;color:var(--ink-mid);line-height:1.6">
+      <strong style="color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px">Author &amp; Provenance</strong>
+      By <strong style="color:var(--ink)">Julio de Mello Bezerra</strong>. This interactive page was created based on <a href="https://github.com/JuliodeMelloBezerra/Strong-Pseudoprimes" target="_blank" rel="noopener noreferrer" style="color:var(--fixed);text-decoration:underline"><em>"Constructing Strong Pseudoprimes"</em></a> article and SageMath program, using AI.
+    </div>
+  </div>
+</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  try {
+    var savedTheme = localStorage.getItem("julio-theme");
+    if (savedTheme === "dark" || savedTheme === "light") {
+      document.documentElement.setAttribute("data-theme", savedTheme);
+    }
+  } catch(e){}
+
+  var themeBtn = document.getElementById("theme-toggle");
+  if (themeBtn) {
+    themeBtn.addEventListener("click", function(){
+      var cur = document.documentElement.getAttribute("data-theme");
+      var isDark = cur ? cur === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+      var next = isDark ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      try { localStorage.setItem("julio-theme", next); } catch(e){}
+    });
+  }
+
+  /* ---------------- Optimization Ladder ---------------- */
+  var STAGES = [
+    { name:"Naive linear trial", by:"Unfiltered search", year:"baseline · j = 0, 1, 2, …", score:19.80,
+      steps:"100% tested", stepsSub:"every j evaluated",
+      cost:"9.40 units", costSub:"3× full Baillie–PSW (MR-2 + Lucas)",
+      what:"Tests every single integer <code>j ≥ 0</code> using Sage's built-in <code>is_pseudoprime()</code> on <code>p<sub>1</sub>, p<sub>2</sub>, p<sub>3</sub></code>, plus recursive backtracking CRT during setup.",
+      delta:null, projected:false },
+    { name:"Mod-4 CRT alignment", by:"Single-pass residue filter", year:"setup optimization", score:19.25,
+      steps:"100% tested", stepsSub:"setup tree eliminated",
+      cost:"9.40 units", costSub:"zero intermediate CRTs",
+      what:"Observes that <code>gcd(4b<sub>i</sub>, 4b<sub>j</sub>) = 4</code> is the sole obstruction to the Chinese Remainder Theorem. Filtering <code>R<sub>b</sub></code> for a common residue modulo 4 replaces exponential CRT backtracking with one linear pass.",
+      delta:"−0.55 bits · instant CRT setup", projected:false },
+    { name:"+ Unsegmented sieve", by:"3-residue Eratosthenes", year:"B = t², memory O(t²)", score:16.40,
+      steps:"12.5% survive", stepsSub:"(ln t / ln t²)³ = 1/8",
+      cost:"9.40 units", costSub:"is_pseudoprime() on survivors",
+      what:"Eliminates up to 3 forbidden residues <code>b<sub>1</sub>, b<sub>2</sub>, b<sub>3</sub> (mod q)</code> for every prime <code>q ∈ (t, B]</code>, discarding 87.5% of composite triples before big-integer arithmetic.",
+      delta:"−2.85 bits · 8× fewer primality tests", projected:false },
+    { name:"+ Segmented bytearray", by:"Cache-local block sieve", year:"B = t², memory O(t)", score:15.65,
+      steps:"12.5% survive", stepsSub:"sieved in blocks of L = t²",
+      cost:"6.20 units", costSub:"slice copy + .find(1) C scan",
+      what:"Splits the sieve into L2-friendly blocks using pre-allocated <code>zero_buf</code> slice assignment and scans survivors via <code>good.find(1)</code> at C <code>memchr</code> speed instead of Python loop iteration.",
+      delta:"−0.75 bits · quadratic memory reduction", projected:false },
+    { name:"+ Drop Strong Lucas", by:"Base-2 MR only in loop", year:"deferred full-basis check", score:14.35,
+      steps:"12.5% survive", stepsSub:"false positives caught at end",
+      cost:"2.55 units", costSub:"no 3× Lucas U_k, V_k chain",
+      what:"Omits the expensive Strong Lucas test inside the hot loop. Any rare base-2 pseudoprime factor is rejected by the final <code>miller_rabin(n, T)</code> verification anyway.",
+      delta:"−1.30 bits · 2.4× cheaper per survivor", projected:false },
+    { name:"+ Reciprocity MR-2", by:"Mod-8 Euler criterion", year:"current SageMath script", score:13.62,
+      steps:"12.5% survive", stepsSub:"k₂, k₃ ≡ 1 (4) ⇒ pᵢ ≡ 3 (8)",
+      cost:"1.54 units", costSub:"1 pow(2, (p−1)≫1, p), no valuation(2)",
+      what:"Uses Quadratic Reciprocity and prioritizes <code>k<sub>2</sub>, k<sub>3</sub> ≡ 1 (mod 4)</code> with <code>r ≡ 3 (mod 4)</code> so <code>p<sub>i</sub> ≡ 3 (mod 8)</code>. Fixes <code>s = 1</code> a priori and reduces each test to a single modular exponentiation.",
+      delta:"−0.73 bits · fastest pure SageMath", projected:false },
+    { name:"C / GMP mpn_powm", by:"Native limb arithmetic", year:"projected C port", score:10.45,
+      steps:"12.5% survive", stepsSub:"zero heap allocations",
+      cost:"0.17 units", costSub:"Montgomery REDC + base-2 bit shifts",
+      what:"Replaces Python object creation with pre-allocated GMP limb buffers and base-2 sliding-window Montgomery reduction where multiplication by 2 is a 1-bit shift.",
+      delta:"−3.17 bits · ~9× over Python/Sage (projected)", projected:true },
+    { name:"GMP + 16-core OpenMP", by:"Parallel block sieving", year:"projected multithreaded C", score:6.50,
+      steps:"12.5% / 16 cores", stepsSub:"lock-free atomic k₀ += L",
+      cost:"0.011 units", costSub:"linear scaling across threads",
+      what:"Each worker thread sieves a disjoint block <code>[k<sub>0</sub>, k<sub>0</sub> + L)</code> against the shared read-only residue table <code>data</code>, achieving near-linear multi-core speedup.",
+      delta:"−3.95 bits · ~15.5× parallel speedup (projected)", projected:true }
+  ];
+
+  function fmtScore(v){ return v.toFixed(2); }
+
+  var ladder = document.getElementById("ladder");
+  var readout = document.getElementById("readout");
+  var selected = 5;
+  var zoom = false;
+
+  var WORST_SCORE = STAGES[0].score;
+  var BEST_SCORE  = STAGES[STAGES.length - 1].score;
+
+  function barPct(score){
+    if(zoom){
+      var hi = 16.5;
+      if(score > hi) return null;
+      return Math.max(0, Math.min(100, (hi - score) / (hi - BEST_SCORE) * 100));
+    }
+    return Math.max(0, Math.min(100, (WORST_SCORE - score) / (WORST_SCORE - BEST_SCORE) * 100));
+  }
+
+  function buildLadder(){
+    ladder.textContent = "";
+    STAGES.forEach(function(s, i){
+      if(i === 6){
+        var div = document.createElement("div");
+        div.className = "ladder-divider";
+        div.textContent = "Projected Native C / GMP & Multithreaded Implementations (striped)";
+        ladder.appendChild(div);
+      }
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "rung" + (s.projected ? " is-projected" : "");
+      b.setAttribute("aria-pressed", String(i === selected));
+      var pct = barPct(s.score);
+
+      var nm = document.createElement("span");
+      nm.className = "rung-name";
+      nm.appendChild(document.createTextNode(s.name));
+      var yr = document.createElement("span");
+      yr.className = "rung-year";
+      if(s.by){
+        var who = document.createElement("span");
+        who.className = "who";
+        who.textContent = s.by;
+        yr.appendChild(who);
+        yr.appendChild(document.createTextNode(" · " + s.year));
+      } else {
+        yr.textContent = s.year;
+      }
+      nm.appendChild(yr);
+
+      var tr = document.createElement("span");
+      tr.className = "track";
+      if(pct === null){
+        var o = document.createElement("span");
+        o.className = "offscale";
+        o.textContent = "off scale →";
+        tr.appendChild(o);
+      } else if(i === 0){
+        var bl = document.createElement("span");
+        bl.className = "baseline-label";
+        bl.textContent = "baseline (unfilled · 0 bits saved)";
+        tr.appendChild(bl);
+      } else {
+        var bar = document.createElement("span");
+        bar.className = "bar" + (s.projected ? " is-projected" : "");
+        bar.style.width = pct + "%";
+        tr.appendChild(bar);
+      }
+
+      var sc = document.createElement("span");
+      sc.className = "rung-score";
+      sc.textContent = fmtScore(s.score) + " bits";
+
+      b.appendChild(nm); b.appendChild(tr); b.appendChild(sc);
+      b.addEventListener("click", function(){ selected = i; buildLadder(); drawReadout(); });
+      ladder.appendChild(b);
+    });
+  }
+
+  function term(cls, lab, valHtml, subHtml){
+    var d = document.createElement("div");
+    d.className = "term " + cls;
+    var l = document.createElement("span"); l.className = "term-lab"; l.textContent = lab;
+    var v = document.createElement("span"); v.className = "term-val"; v.innerHTML = valHtml;
+    var s = document.createElement("span"); s.className = "term-sub"; s.innerHTML = subHtml;
+    d.appendChild(l); d.appendChild(v); d.appendChild(s);
+    return d;
+  }
+
+  function drawReadout(){
+    var s = STAGES[selected];
+    readout.textContent = "";
+
+    var by = document.createElement("p");
+    by.className = "byline";
+    if(s.by){
+      var w = document.createElement("span");
+      w.className = "who";
+      w.textContent = s.by;
+      by.appendChild(w);
+      by.appendChild(document.createTextNode(" — " + s.year));
+    } else {
+      by.textContent = s.year;
+    }
+    readout.appendChild(by);
+
+    var eq = document.createElement("div");
+    eq.className = "eq";
+    eq.appendChild(term("is-fixed", "candidate pool", s.steps, s.stepsSub));
+    eq.appendChild(term("is-moves", "cost per survivor", s.cost, s.costSub));
+    eq.appendChild(term("", "work index", "2<sup>" + fmtScore(s.score) + "</sup>", s.projected ? "projected bit-ops" : "measured bit-ops"));
+    readout.appendChild(eq);
+
+    var p = document.createElement("p");
+    p.className = "detail-what";
+    p.innerHTML = s.what;
+    readout.appendChild(p);
+
+    if(s.delta){
+      var d = document.createElement("span");
+      d.className = "delta";
+      d.textContent = s.delta;
+      readout.appendChild(d);
+    }
+  }
+
+  document.getElementById("sc-full").addEventListener("click", function(){
+    zoom = false;
+    this.setAttribute("aria-pressed","true");
+    document.getElementById("sc-zoom").setAttribute("aria-pressed","false");
+    buildLadder();
+  });
+  document.getElementById("sc-zoom").addEventListener("click", function(){
+    zoom = true;
+    this.setAttribute("aria-pressed","true");
+    document.getElementById("sc-full").setAttribute("aria-pressed","false");
+    buildLadder();
+  });
+
+  buildLadder();
+  drawReadout();
+
+  /* ---------------- 6-Step Arnault Walkthrough ---------------- */
+  var STEPS = [
+    { tag:"step 1 · basis", title:"Fix the adversarial prime basis <i>T</i>",
+      formula:"T = { p prime : p ≤ t }",
+      mech:"The target verifier runs Miller–Rabin using all primes up to <code>t</code>. To fool every check, our composite <code>n = p<sub>1</sub>p<sub>2</sub>p<sub>3</sub></code> must be a strong pseudoprime to every prime base <code>b ∈ T</code> simultaneously.",
+      costGen:"General: O(t log log t) via Sieve of Eratosthenes",
+      costSpec:"Chosen T (t = 1200, |T| = 196 primes): < 1 ms", unk:198 },
+
+    { tag:"step 2 · non-residues", title:"Compute odd non-quadratic residue sets <i>S<sub>b</sub></i> mod 4<i>b</i>",
+      formula:"S<sub>b</sub> = { p ∈ (3, 4b) odd : (b / p) = −1 }  for each b ∈ T",
+      mech:"By quadratic reciprocity, the Kronecker symbol <code>(b / p) = −1</code> depends only on <code>p mod 4b</code>. Notice that for <code>b = 2</code>, <code>4b = 8</code> and <code>S<sub>2</sub> = {3, 5}</code> — which automatically excludes <code>1</code> and <code>7 (mod 8)</code>.",
+      costGen:"General: O(∑ b · log b) ≈ O(t²)",
+      costSpec:"Chosen T (t = 1200, 196 sets): ~0.08 s", unk:198 },
+
+    { tag:"step 3 · multipliers", title:"Select supplemental primes <i>k</i><sub>2</sub>, <i>k</i><sub>3</sub> ∉ <i>T</i> and intersect <i>R<sub>b</sub></i>",
+      formula:"R<sub>b</sub> := S<sub>b</sub> ∩ k<sub>2</sub><sup>−1</sup>(S<sub>b</sub> + k<sub>2</sub> − 1) ∩ k<sub>3</sub><sup>−1</sup>(S<sub>b</sub> + k<sub>3</sub> − 1) ≠ ∅  in Z/4bZ",
+      mech:"Since <code>p<sub>i</sub> = k<sub>i</sub>(p<sub>1</sub> − 1) + 1</code>, requiring <code>p<sub>i</sub> mod 4b ∈ S<sub>b</sub></code> for <code>i = 1, 2, 3</code> means <code>p<sub>1</sub> mod 4b</code> must lie in the intersection <code>R<sub>b</sub></code> for every <code>b ∈ T</code>.",
+      costGen:"General: O(h · t²) set operations per (k₂, k₃) trial",
+      costSpec:"Chosen T (k₂ = 1201, k₃ = 3593): ~0.04 s", unk:96 },
+
+    { tag:"step 4 · mod-4 filter", title:"Resolve CRT compatibility in one pass (no backtracking)",
+      formula:"∀ b ∈ T,  choose z<sub>b</sub> ∈ R<sub>b</sub>  such that  z<sub>b</sub> ≡ r<sub>0</sub> (mod 4)   (r<sub>0</sub> ∈ {1, 3})",
+      mech:"Because <code>gcd(4b<sub>i</sub>, 4b<sub>j</sub>) = 4</code> for all distinct primes, the residue modulo <code>4</code> is the sole obstruction to the Chinese Remainder Theorem. Picking elements from each <code>R<sub>b</sub></code> that agree modulo <code>4</code> avoids all CRT backtracking.",
+      costGen:"General: O(|T|) = O(t / ln t) linear scan",
+      costSpec:"Chosen T (196 lists): < 1 ms (0 intermediate CRTs)", unk:3 },
+
+    { tag:"step 5 · korselt crt", title:"Enforce Korselt divisibility and solve the single final CRT",
+      formula:"p<sub>1</sub> ≡ −k<sub>3</sub><sup>−1</sup> (mod k<sub>2</sub>),   p<sub>1</sub> ≡ −k<sub>2</sub><sup>−1</sup> (mod k<sub>3</sub>)   ⟹   p<sub>1</sub> ≡ r (mod M)",
+      mech:"Combining the <code>|T|</code> non-residue congruences with the two Korselt congruences modulo <code>k<sub>2</sub></code> and <code>k<sub>3</sub></code> yields a single congruence <code>p<sub>1</sub> ≡ r (mod M)</code>, where <code>M = 4 k<sub>2</sub> k<sub>3</sub> ∏<sub>b∈T</sub> b</code>.",
+      costGen:"General: O(t · ln² t) single multi-modulus CRT",
+      costSpec:"Chosen T (M has 516 decimal digits): ~0.02 s", unk:1 },
+
+    { tag:"step 6 · prime search", title:"Find primes satisfying the congruences (the costliest bottleneck)",
+      formula:"p<sub>1</sub> = r + jM,   p<sub>2</sub> = k<sub>2</sub>(p<sub>1</sub> − 1) + 1,   p<sub>3</sub> = k<sub>3</sub>(p<sub>1</sub> − 1) + 1 ∈ P",
+      mech:"We now search over <code>j ∈ N</code> until <code>p<sub>1</sub>, p<sub>2</sub>, p<sub>3</sub></code> are simultaneously prime. <b>This step is by far the most expensive part of the entire algorithm</b>, both in time and memory, and is the focus of the next three sections (segmented sieving, custom quadratic-reciprocity primality testing, and asymptotic tuning).",
+      costGen:"General: Õ(t⁵) naive  →  Õ(t²) per block with B = t² sieve & custom MR-2",
+      costSpec:"Chosen T (producing 1,546-digit pseudoprime n): ~4.2 s optimized vs. hours naive", unk:0 }
+  ];
+
+  var stepsNav = document.getElementById("steps-nav");
+  var stepBody = document.getElementById("step-body");
+  var step = 0;
+
+  function drawStep(){
+    stepsNav.textContent = "";
+    STEPS.forEach(function(s, i){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "step-dot";
+      b.setAttribute("aria-pressed", String(i === step));
+      b.textContent = "0" + (i + 1);
+      b.addEventListener("click", function(){ step = i; drawStep(); });
+      stepsNav.appendChild(b);
+    });
+
+    var s = STEPS[step];
+    stepBody.textContent = "";
+
+    var tag = document.createElement("span");
+    tag.className = "step-phase"; tag.textContent = s.tag;
+    stepBody.appendChild(tag);
+
+    var h = document.createElement("h3");
+    h.className = "step-title"; h.innerHTML = s.title;
+    stepBody.appendChild(h);
+
+    var costHtml = '<div class="cost-split"><span class="cost-general">' + s.costGen + '</span><span class="cost-specific">' + s.costSpec + '</span></div>';
+
+    [["algebraic state", s.formula, "formula"],
+     ["what happens", s.mech, ""],
+     ["computational cost", costHtml, "cost"]].forEach(function(row){
+      var d = document.createElement("div"); d.className = "step-row";
+      var k = document.createElement("div"); k.className = "step-k"; k.textContent = row[0];
+      var v = document.createElement("div"); v.className = "step-v " + row[2];
+      v.innerHTML = row[1];
+      d.appendChild(k); d.appendChild(v);
+      stepBody.appendChild(d);
+    });
+
+    var pct = s.unk <= 0 ? 0 : Math.max(2, (s.unk / 198) * 100);
+    document.getElementById("unk-fill").style.width = pct + "%";
+    document.getElementById("unk-val").innerHTML =
+      s.unk <= 0 ? "0 — primes p₁, p₂, p₃ found" :
+      s.unk === 1 ? "1 linear progression (p₁ = r + jM)" :
+      s.unk + " moduli remaining";
+
+    document.getElementById("step-prev").disabled = (step === 0);
+    document.getElementById("step-next").disabled = (step === STEPS.length - 1);
+  }
+
+  document.getElementById("step-prev").addEventListener("click", function(){ if(step > 0){ step--; drawStep(); } });
+  document.getElementById("step-next").addEventListener("click", function(){ if(step < STEPS.length - 1){ step++; drawStep(); } });
+  drawStep();
+
+  /* ---------------- B = c * t^a Asymptotic Slider ---------------- */
+  var chart = document.getElementById("bchart");
+  var aslider = document.getElementById("aslider");
+  var tslider = document.getElementById("tslider");
+  var cslider = document.getElementById("cslider");
+  var tBtns = document.querySelectorAll("#t-presets button");
+  var T_VAL = 1200;
+
+  function effA(a, c){ return Math.max(1.001, a + Math.log(c) / Math.log(T_VAL)); }
+  function sieveWork(a, c){ return (c * Math.pow(T_VAL, a)) / effA(a, c); }
+  function survFrac(a, c){ return 1 / Math.pow(effA(a, c), 3); }
+  function primWork(a, c){ return 100.0 * Math.pow(T_VAL, 2) * survFrac(a, c); }
+  function totalLog10(a, c){ return Math.log10(sieveWork(a, c) + primWork(a, c)); }
+
+  function findOpt(c){
+    var optA = 2.0, minLog = Infinity;
+    for(var x = 1.0; x <= 3.5001; x += 0.01){
+      var v = totalLog10(x, c);
+      if(v < minLog){ minLog = v; optA = x; }
+    }
+    var tol = 0.065, bMin = optA, bMax = optA;
+    for(var y = 1.0; y <= 3.5001; y += 0.01){
+      if(totalLog10(y, c) <= minLog + tol){
+        if(y < bMin) bMin = y;
+        if(y > bMax) bMax = y;
+      }
+    }
+    return { optA: optA, minLog: minLog, bMin: bMin, bMax: bMax, tol: tol };
+  }
+
+  function svgEl(n, attrs){
+    var el = document.createElementNS("http://www.w3.org/2000/svg", n);
+    for(var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+
+  var W = 520, H = 195, PADL = 46, PADR = 14, PADT = 16, PADB = 34;
+  function xOf(a){ return PADL + ((a - 1.0) / 2.5) * (W - PADL - PADR); }
+
+  function drawChart(opt){
+    chart.textContent = "";
+    var a = Number(aslider.value);
+    var c = Number(cslider.value);
+    var lo = Math.floor(opt.minLog) - 0.35;
+    var hi = Math.ceil(Math.max(totalLog10(1.0, c), totalLog10(3.5, c))) + 0.25;
+    function yOf(v){ return PADT + (hi - v) / (hi - lo) * (H - PADT - PADB); }
+
+    chart.appendChild(svgEl("rect", {
+      x: xOf(opt.bMin), y: PADT, width: Math.max(4, xOf(opt.bMax) - xOf(opt.bMin)), height: H - PADT - PADB,
+      fill: "currentColor", opacity: ".07"
+    }));
+
+    chart.appendChild(svgEl("line", { x1:PADL, y1:H-PADB, x2:W-PADR, y2:H-PADB, stroke:"currentColor", "stroke-width":1, opacity:".35" }));
+    [Math.round(lo + 0.8), Math.round((lo + hi) / 2), Math.round(hi - 0.8)].forEach(function(v){
+      chart.appendChild(svgEl("line", { x1:PADL, y1:yOf(v), x2:W-PADR, y2:yOf(v), stroke:"currentColor", "stroke-width":1, opacity:".12" }));
+      var t = svgEl("text", { x:PADL-7, y:yOf(v)+3.5, "text-anchor":"end", "font-family":"IBM Plex Mono, monospace", "font-size":"10", fill:"currentColor", opacity:".6" });
+      t.textContent = "10^" + v;
+      chart.appendChild(t);
+    });
+
+    var pts = [];
+    for(var x = 1.0; x <= 3.501; x += 0.05){
+      pts.push(xOf(x).toFixed(1) + "," + yOf(totalLog10(x, c)).toFixed(1));
+    }
+    chart.appendChild(svgEl("polyline", { points: pts.join(" "), fill:"none", stroke:"currentColor", "stroke-width":1.9, opacity:".7" }));
+
+    chart.appendChild(svgEl("line", { x1:xOf(opt.optA), y1:PADT, x2:xOf(opt.optA), y2:H-PADB, stroke:"currentColor", "stroke-width":1, "stroke-dasharray":"3 3", opacity:".55" }));
+    var optTxt = svgEl("text", { x:opt.optA > 2.7 ? xOf(opt.optA)-6 : xOf(opt.optA)+6, y:PADT+12, "text-anchor":opt.optA > 2.7 ? "end" : "start", "font-family":"IBM Plex Mono, monospace", "font-size":"9.5", fill:"currentColor", opacity:".75" });
+    optTxt.textContent = "min work: a = " + opt.optA.toFixed(2);
+    chart.appendChild(optTxt);
+
+    var curLog = totalLog10(a, c);
+    var optimal = (curLog - opt.minLog <= opt.tol);
+    var col = optimal ? "#3D5A80" : "#B5316B";
+    var curY = yOf(curLog);
+    chart.appendChild(svgEl("line", { x1:xOf(a), y1:curY, x2:xOf(a), y2:H-PADB, stroke:col, "stroke-width":1.4, opacity:".6" }));
+    chart.appendChild(svgEl("circle", { cx:xOf(a), cy:curY, r:5, fill:col }));
+
+    var lTxt = svgEl("text", { x:PADL, y:H-PADB+18, "font-family":"IBM Plex Mono, monospace", "font-size":"10", fill:"currentColor", opacity:".6" });
+    lTxt.textContent = "a = 1.0 (undersieved)";
+    chart.appendChild(lTxt);
+
+    var rTxt = svgEl("text", { x:W-PADR, y:H-PADB+18, "text-anchor":"end", "font-family":"IBM Plex Mono, monospace", "font-size":"10", fill:"currentColor", opacity:".6" });
+    rTxt.textContent = "a = 3.5 (oversieved)";
+    chart.appendChild(rTxt);
+  }
+
+  function updateSliders(){
+    T_VAL = Number(tslider.value);
+    var a = Number(aslider.value);
+    var c = Number(cslider.value);
+    var opt = findOpt(c);
+    var approxModDigits = Math.round(T_VAL * Math.LOG10E);
+    var approxPpDigits = approxModDigits * 3 + 7;
+
+    tBtns.forEach(function(btn){
+      btn.setAttribute("aria-pressed", String(Number(btn.getAttribute("data-t")) === T_VAL));
+    });
+
+    document.getElementById("lbl-a").textContent = "a = " + a.toFixed(2);
+    document.getElementById("lbl-t").textContent = "t = " + T_VAL.toLocaleString();
+    document.getElementById("lbl-c").textContent = "c = " + c.toFixed(1);
+    document.getElementById("k-t").textContent = "basis bound t (pseudoprime ≈ " + approxPpDigits.toLocaleString() + " digits)";
+    document.getElementById("b-t").textContent = "t = " + T_VAL.toLocaleString();
+    document.getElementById("k-bound").innerHTML = "sieve bound B = " + (c === 1 ? "" : c.toFixed(1) + " · ") + "t<sup>a</sup>";
+    document.getElementById("k-sieve").innerHTML = "sieve work ~ π(B) ≈ (" + (c === 1 ? "" : c.toFixed(1) + " · ") + "t<sup>a</sup>) / α";
+
+    var B = c * Math.pow(T_VAL, a);
+    var bExp = Math.floor(Math.log10(B));
+    var bMant = B / Math.pow(10, bExp);
+    var survPct = 100 * survFrac(a, c);
+    var sLog = Math.log10(sieveWork(a, c));
+    var pLog = Math.log10(primWork(a, c));
+    var totLog = totalLog10(a, c);
+    var deltaLog = Math.max(0, totLog - opt.minLog);
+    var isOpt = (deltaLog <= opt.tol);
+
+    document.getElementById("b-bound").innerHTML = bMant.toFixed(2) + " × 10<sup>" + bExp + "</sup>";
+    document.getElementById("b-surv").textContent = survPct.toFixed(2) + "%";
+    document.getElementById("b-sieve").innerHTML = "10<sup>" + sLog.toFixed(2) + "</sup>";
+    document.getElementById("b-prim").innerHTML  = "10<sup>" + pLog.toFixed(2) + "</sup>";
+    document.getElementById("b-total").innerHTML = "10<sup>" + totLog.toFixed(2) + "</sup>";
+
+    var v = document.getElementById("b-verdict");
+    if(isOpt){
+      v.className = "verdict ok";
+      v.innerHTML = "Near-optimal balance (within " + Math.round((Math.pow(10, deltaLog) - 1) * 100) + "% of minimum total work 10<sup>" + opt.minLog.toFixed(2) + "</sup> at a = " + opt.optA.toFixed(2) + ", c = " + c.toFixed(1) + ").";
+    } else if(a < opt.optA){
+      v.className = "verdict no";
+      v.innerHTML = "Undersieved (a = " + a.toFixed(2) + " &lt; " + opt.optA.toFixed(2) + "). Total work is " + Math.pow(10, deltaLog).toFixed(1) + "× higher than minimum because " + survPct.toFixed(1) + "% of composite triples reach the " + approxModDigits.toLocaleString() + "-digit MR-2 test.";
+    } else {
+      v.className = "verdict no";
+      v.innerHTML = "Oversieved (a = " + a.toFixed(2) + " &gt; " + opt.optA.toFixed(2) + "). Total work is " + Math.pow(10, deltaLog).toFixed(1) + "× higher than minimum because exponential sieve cost outweighs diminishing 1/a³ Mertens returns.";
+    }
+    drawChart(opt);
+  }
+
+  tBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      tslider.value = btn.getAttribute("data-t");
+      updateSliders();
+    });
+  });
+
+  aslider.addEventListener("input", updateSliders);
+  tslider.addEventListener("input", updateSliders);
+  cslider.addEventListener("input", updateSliders);
+  updateSliders();
+})();
+</script>
+
+</body></html>
