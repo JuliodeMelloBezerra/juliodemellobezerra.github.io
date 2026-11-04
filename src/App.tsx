@@ -340,10 +340,7 @@ export default function App() {
 
                 <div className="space-y-4 text-[15px] leading-relaxed text-neutral-700 dark:text-neutral-300">
                   <p>
-                    I am a PhD Mathematician at the University of Regensburg transitioning into applied cryptography. My work bridges rigorous theoretical foundations in number theory, arithmetic geometry, elliptic curves, and lattices with practical, executable implementations in Python and SageMath.
-                  </p>
-                  <p>
-                    Recently, I completed my doctoral dissertation on the Shintani cocycle decomposition of topological polylogarithms (magna cum laude), ranked in the top 1% globally on CryptoHack CTF, and serve as an elliptic curve cryptanalysis judge for the{' '}
+                    I am a number theorist by training, venturing into the world of cryptography. I spend my time studying practical implementations of encryption schemes and exploring how number-theoretic methods can either break or optimize them. Currently, I serve as an elliptic curve cryptanalysis judge for the{' '}
                     <a
                       href={profile.curveSmashUrl}
                       target="_blank"
@@ -353,6 +350,12 @@ export default function App() {
                       Yukon CurveSmash project
                     </a>
                     .
+                  </p>
+                  <p>
+                    Previously, I did research on elliptic curves, modular forms, Galois representations, Iwasawa theory, and special values of L-functions at the University of Regensburg, where I obtained my PhD.
+                  </p>
+                  <p>
+                    I like football, swimming, and reaching the top of mountains.
                   </p>
                 </div>
 
