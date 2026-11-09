@@ -1,0 +1,1800 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smashing the Tower Number Field Sieve — BLS12-381 (Part 1)</title>
+    <meta name="description" content="How the Tower Number Field Sieve (TNFS) dominated progress across three cryptanalysis tracks on BLS12-381, and how CurveSmash pushed the verified cost down to 2^115.70." />
+    <meta property="og:title" content="Smashing the Tower Number Field Sieve — BLS12-381 (Part 1)" />
+    <meta property="og:description" content="How the Tower Number Field Sieve (TNFS) dominated progress across three cryptanalysis tracks on BLS12-381, and how CurveSmash pushed the verified cost down to 2^115.70." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <style>
+
+
+:root {
+  --ground: #FAFAFA;
+  --surface: #FFFFFF;
+  --sunk: #F5F5F5;
+  --ink: #171717;
+  --ink-mid: #404040;
+  --ink-dim: #737373;
+  --ink-faint: #A3A3A3;
+  --rule: #E5E5E5;
+  --rule-soft: #F0F0F0;
+  --fixed: #525252;
+  --fixed-soft: #F5F5F5;
+  --moves: #2563EB;
+  --moves-soft: #EFF6FF;
+  --proj: #A3A3A3;
+  --proj-soft: #F5F5F5;
+  --shadow: rgba(23, 23, 23, 0.05);
+  --remark-bg: #FEF2F2;
+  --remark-border: #DC2626;
+  --remark-ink: #7F1D1D;
+  --remark-accent: #B91C1C;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0A0A0A;
+    --surface: #121212;
+    --sunk: #171717;
+    --ink: #F5F5F5;
+    --ink-mid: #D4D4D4;
+    --ink-dim: #A3A3A3;
+    --ink-faint: #737373;
+    --rule: #262626;
+    --rule-soft: #1C1C1C;
+    --fixed: #A3A3A3;
+    --fixed-soft: #1F1F1F;
+    --moves: #60A5FA;
+    --moves-soft: #172554;
+    --proj: #525252;
+    --proj-soft: #171717;
+    --shadow: rgba(0, 0, 0, 0.4);
+    --remark-bg: rgba(127, 29, 29, 0.22);
+    --remark-border: #EF4444;
+    --remark-ink: #FECACA;
+    --remark-accent: #F87171;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #0A0A0A;
+  --surface: #121212;
+  --sunk: #171717;
+  --ink: #F5F5F5;
+  --ink-mid: #D4D4D4;
+  --ink-dim: #A3A3A3;
+  --ink-faint: #737373;
+  --rule: #262626;
+  --rule-soft: #1C1C1C;
+  --fixed: #A3A3A3;
+  --fixed-soft: #1F1F1F;
+  --moves: #60A5FA;
+  --moves-soft: #172554;
+  --proj: #525252;
+  --proj-soft: #171717;
+  --shadow: rgba(0, 0, 0, 0.4);
+  --remark-bg: rgba(127, 29, 29, 0.22);
+  --remark-border: #EF4444;
+  --remark-ink: #FECACA;
+  --remark-accent: #F87171;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  line-height: 1.68;
+  margin: 0;
+  padding-inline: 24px;
+  padding-block: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.wrap {
+  max-width: 896px;
+  margin: 0 auto;
+}
+
+.col {
+  max-width: 68ch;
+  margin-inline: auto;
+}
+
+h1,
+h2,
+h3,
+.ui {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.mono,
+code,
+.num {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+sup,
+sub {
+  font-size: 0.72em;
+  line-height: 0;
+}
+
+/* ---------- math & citations ---------- */
+.math-display {
+  margin: 22px 0;
+  padding: 10px 14px;
+  overflow-x: auto;
+  text-align: center;
+  color: var(--ink);
+}
+
+a.cite-ref {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.76em;
+  color: var(--moves);
+  text-decoration: none;
+  margin-left: 2px;
+  vertical-align: super;
+  line-height: 0;
+  font-weight: 500;
+}
+
+a.cite-ref:hover {
+  text-decoration: underline;
+}
+
+a.ext-link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+a.ext-link:hover {
+  color: var(--moves);
+}
+
+/* ---------- top-nav & masthead ---------- */
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-block: 16px;
+  border-bottom: 1px solid var(--rule);
+  font-family: "Inter", sans-serif;
+  font-size: 13.5px;
+}
+
+.top-nav-brand {
+  color: var(--ink-dim);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+}
+
+.top-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-action {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11.5px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink-mid);
+  padding: 6px 12px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-action:hover {
+  background: var(--sunk);
+  color: var(--ink);
+  border-color: var(--ink-faint);
+  text-decoration: none;
+}
+
+header {
+  padding-block: 56px 36px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.eyebrow {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin: 0 0 18px;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  margin: 0;
+  text-wrap: balance;
+  hyphens: manual;
+  color: var(--ink);
+}
+
+.tnfs-hi {
+  color: var(--moves);
+  font-weight: 700;
+}
+
+.standfirst {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--ink-mid);
+  max-width: 64ch;
+  margin: 20px 0 0;
+}
+
+.standfirst b {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.author-byline {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-dim);
+  margin: 18px 0 0;
+}
+
+.author-byline .who {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ---------- remark red-box ---------- */
+.remark-box {
+  margin-top: 24px;
+  padding: 15px 18px;
+  border: 1px solid var(--remark-border);
+  border-left: 4px solid var(--remark-border);
+  border-radius: 6px;
+  background: var(--remark-bg);
+  color: var(--remark-ink);
+  font-size: 0.91rem;
+  line-height: 1.6;
+}
+
+.remark-box-title {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--remark-accent);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.remark-box b,
+.remark-box strong {
+  color: var(--remark-ink);
+  font-weight: 600;
+}
+
+.remark-box code {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(220, 38, 38, 0.25);
+  color: var(--remark-ink);
+}
+
+/* ---------- prose ---------- */
+section {
+  padding-block: 48px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+section:last-of-type {
+  border-bottom: 0;
+}
+
+h2 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+h2 .idx {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--ink-dim);
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+h3 {
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 32px 0 10px;
+  color: var(--ink);
+}
+
+p {
+  margin: 0 0 16px;
+  color: var(--ink-mid);
+}
+
+.col > p:last-child {
+  margin-bottom: 0;
+}
+
+code {
+  font-size: 0.86em;
+  background: var(--sunk);
+  padding: 0.12em 0.36em;
+  border-radius: 4px;
+  color: var(--ink);
+  border: 1px solid var(--rule-soft);
+}
+
+em {
+  font-style: italic;
+}
+
+strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+ul {
+  margin: 0 0 16px;
+  padding-left: 1.2em;
+  color: var(--ink-mid);
+  list-style: disc;
+}
+
+li {
+  margin-bottom: 7px;
+}
+
+.aside {
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 16px 20px;
+  margin: 26px 0;
+  color: var(--ink-mid);
+  font-size: 0.92rem;
+  border-radius: 6px;
+}
+
+.aside b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- collapsible math & code disclosures ---------- */
+details.code-fold {
+  margin: 22px 0;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+details.code-fold summary {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  color: var(--ink-mid);
+  padding: 10px 16px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+details.code-fold summary:hover {
+  background: var(--sunk);
+  color: var(--ink);
+}
+
+details.code-fold[open] summary {
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+}
+
+details.code-fold .fold-body {
+  padding: 16px 20px;
+  background: var(--sunk);
+  font-size: 0.92rem;
+  color: var(--ink-mid);
+  line-height: 1.64;
+}
+
+details.code-fold .fold-body p {
+  margin: 0 0 12px;
+}
+
+details.code-fold .fold-body p:last-child {
+  margin-bottom: 0;
+}
+
+.tag-badge {
+  display: inline-block;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.tag-math {
+  background: var(--moves-soft);
+  color: var(--moves);
+}
+
+.tag-impl {
+  background: var(--surface);
+  color: var(--ink-mid);
+  border: 1px solid var(--rule);
+}
+
+/* ---------- instrument panels ---------- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  margin: 34px 0;
+  padding: 24px 22px;
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.panel-title {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin: 0;
+}
+
+.hint {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+/* ---------- ladder ---------- */
+.scaletoggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.scaletoggle button {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  background: transparent;
+  color: var(--ink-dim);
+  border: 0;
+  padding: 6px 11px;
+  cursor: pointer;
+}
+
+.scaletoggle button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--ground);
+}
+
+.ladder {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ladder-divider {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 10px 12px 4px;
+  border-top: 1px dashed var(--rule);
+  margin-top: 4px;
+}
+
+.rung {
+  display: grid;
+  grid-template-columns: minmax(195px, 1.4fr) minmax(0, 2.5fr) 110px;
+  gap: 14px;
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  padding: 9px 10px 9px 12px;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  width: 100%;
+  font-family: inherit;
+}
+
+.rung:hover {
+  background: var(--sunk);
+}
+
+.rung[aria-pressed="true"] {
+  background: var(--sunk);
+  outline: 1px solid var(--moves);
+}
+
+.rung.is-projected {
+  background: var(--proj-soft);
+}
+
+.rung.is-projected:hover {
+  background: var(--sunk);
+}
+
+.rung:focus-visible {
+  outline: 2px solid var(--moves);
+  outline-offset: -2px;
+}
+
+.rung-name {
+  font-family: "Inter", sans-serif;
+  font-size: 0.86rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.rung-year {
+  display: block;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+  font-weight: 400;
+  color: var(--ink-faint);
+  letter-spacing: 0.03em;
+  margin-top: 3px;
+}
+
+.rung-year .who {
+  color: var(--ink-mid);
+  font-weight: 500;
+}
+
+.rung[aria-pressed="true"] .rung-year .who {
+  color: var(--moves);
+}
+
+.byline {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--ink-dim);
+  margin: 0 0 12px;
+}
+
+.byline .who {
+  color: var(--moves);
+  font-weight: 500;
+}
+
+.track {
+  height: 18px;
+  background: var(--sunk);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--rule-soft);
+  border-radius: 3px;
+}
+
+.bar {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  background: var(--fixed);
+  transition: width 0.5s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.bar.is-projected {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--proj),
+    var(--proj) 5px,
+    transparent 5px,
+    transparent 9px
+  );
+  border-right: 2px solid var(--proj);
+}
+
+.rung[aria-pressed="true"] .bar {
+  background: var(--moves);
+}
+
+.rung[aria-pressed="true"] .bar.is-projected {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--moves),
+    var(--moves) 5px,
+    transparent 5px,
+    transparent 9px
+  );
+  border-right: 2px solid var(--moves);
+}
+
+.rung-score {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.84rem;
+  font-weight: 500;
+  text-align: right;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.offscale {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--ink-faint);
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.baseline-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--ink-faint);
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ---------- detail readout ---------- */
+.readout {
+  margin-top: 22px;
+  border-top: 1px solid var(--rule);
+  padding-top: 20px;
+}
+
+.eq {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  font-family: "JetBrains Mono", monospace;
+  margin-bottom: 20px;
+}
+
+.term {
+  padding: 11px 16px 11px 0;
+  margin-right: 16px;
+  border-right: 1px solid var(--rule);
+}
+
+.term:last-child {
+  border-right: 0;
+  margin-right: 0;
+  padding-right: 0;
+}
+
+.term-lab {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 5px;
+}
+
+.term-val {
+  display: block;
+  font-size: 1.08rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.term.is-fixed .term-val {
+  color: var(--ink);
+}
+
+.term.is-moves .term-val {
+  color: var(--moves);
+}
+
+.term-sub {
+  display: block;
+  font-size: 10.5px;
+  color: var(--ink-dim);
+  margin-top: 3px;
+}
+
+.detail-what {
+  font-size: 0.94rem;
+  color: var(--ink-mid);
+  margin: 0 0 14px;
+  max-width: 62ch;
+}
+
+.detail-what b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.delta {
+  display: inline-block;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  background: var(--moves-soft);
+  color: var(--moves);
+  padding: 3px 9px;
+  letter-spacing: 0.02em;
+  border-radius: 4px;
+}
+
+/* ---------- stepper ---------- */
+.steps-nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.step-dot {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink-dim);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.step-dot:hover {
+  border-color: var(--ink-dim);
+  color: var(--ink);
+}
+
+.step-dot[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--ground);
+  border-color: var(--ink);
+}
+
+.step-dot:focus-visible {
+  outline: 2px solid var(--moves);
+  outline-offset: 2px;
+}
+
+.step-phase {
+  display: inline-block;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--moves);
+  background: var(--moves-soft);
+  padding: 3px 8px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.step-title {
+  font-family: "Inter", sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 0 0 18px;
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+.step-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 18px;
+  padding: 13px 0;
+  border-top: 1px solid var(--rule-soft);
+  align-items: start;
+}
+
+.step-row:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.step-k {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding-top: 4px;
+}
+
+.step-v {
+  font-size: 0.94rem;
+  line-height: 1.58;
+  color: var(--ink-mid);
+}
+
+.step-v b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.step-v.formula {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.86rem;
+  color: var(--ink);
+  line-height: 1.75;
+  overflow-x: auto;
+}
+
+.step-v.cost {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.86rem;
+  color: var(--ink);
+  line-height: 1.65;
+}
+
+.cost-split {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cost-general {
+  color: var(--ink-mid);
+  font-weight: 500;
+}
+
+.cost-specific {
+  color: var(--moves);
+  font-weight: 500;
+}
+
+.step-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--rule);
+  padding-top: 18px;
+  margin-top: 20px;
+}
+
+.unknown {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+
+.unknown-lab {
+  display: flex;
+  justify-content: space-between;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+}
+
+.unknown-track {
+  height: 8px;
+  background: var(--sunk);
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.unknown-fill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  background: var(--moves);
+  transition: width 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.navbtns {
+  display: flex;
+  gap: 6px;
+}
+
+.navbtn {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink);
+  padding: 7px 14px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.navbtn:hover:not(:disabled) {
+  background: var(--sunk);
+}
+
+.navbtn:disabled {
+  color: var(--ink-faint);
+  cursor: default;
+  opacity: 0.5;
+}
+
+@media (max-width: 520px) {
+  .step-row {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+  .step-k {
+    padding-top: 0;
+  }
+}
+
+/* ---------- norm & ruler panels ---------- */
+.slider-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+
+@media (min-width: 720px) {
+  .slider-grid {
+    grid-template-columns: 1.28fr 1fr;
+    align-items: center;
+  }
+}
+
+.dstat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dstat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  border-bottom: 1px dotted var(--rule);
+  padding-bottom: 7px;
+}
+
+.dstat-k {
+  font-family: "Inter", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--ink-dim);
+}
+
+.dstat-v {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.verdict {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  padding: 8px 11px;
+  line-height: 1.45;
+  border-radius: 4px;
+}
+
+.verdict.ok {
+  background: var(--moves-soft);
+  color: var(--moves);
+}
+
+.verdict.no {
+  background: var(--sunk);
+  color: var(--ink-mid);
+  border: 1px solid var(--rule);
+}
+
+.check-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11.5px;
+  color: var(--ink-mid);
+  cursor: pointer;
+  user-select: none;
+}
+
+.check-item input {
+  accent-color: var(--moves);
+  cursor: pointer;
+  margin-right: 6px;
+}
+
+.check-item .pen {
+  color: var(--moves);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ---------- figures (wider for clear readability) ---------- */
+figure {
+  margin: 34px auto;
+  max-width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 24px 24px 20px;
+  border-radius: 6px;
+}
+
+figure svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  color: var(--ink-mid);
+}
+
+figcaption {
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-soft);
+  line-height: 1.55;
+}
+
+figcaption b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- bibliography ---------- */
+footer {
+  padding-block: 44px 76px;
+  color: var(--ink-dim);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.rule-lab {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 16px;
+}
+
+.bib-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bib-item {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 8px;
+  align-items: baseline;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.bib-item:target {
+  border-color: var(--moves);
+  background: var(--moves-soft);
+}
+
+.bib-num {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink-dim);
+}
+
+.bib-body {
+  font-size: 0.88rem;
+  color: var(--ink-mid);
+}
+
+.bib-body b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.bib-body a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  margin-left: 6px;
+}
+
+.bib-body a:hover {
+  color: var(--moves);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .rung {
+    grid-template-columns: 1fr 74px;
+    gap: 8px;
+  }
+  .rung .track {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+  body {
+    font-size: 14.5px;
+  }
+}
+
+    </style>
+  <script src="/_aistudio-iframe.js?v=1f94f900"></script></head>
+  <body>
+    <div id="root"><div class="wrap"><nav class="top-nav" aria-label="Site navigation"><span class="top-nav-brand">CurveSmash Cryptanalysis Series · STNFS Part 1</span><div class="top-nav-actions"><button type="button" class="btn-action" id="theme-toggle-btn">Light / Dark</button></div></nav><header><div class="col"><p class="eyebrow">CurveSmash · BLS12-381 · Special Tower Number Field Sieve (Part 1)</p><h1>Smashing the <span class="tnfs-hi">T</span>ower <span class="tnfs-hi">N</span>umber <span class="tnfs-hi">F</span>ield <span class="tnfs-hi">S</span>ieve</h1><p class="standfirst">How the <b>Tower Number Field Sieve (TNFS)</b> dominated progress across three cryptanalysis tracks on <b>BLS12-381</b>; and how the CurveSmash benchmark established <b>a new gold standard for rigor and cost measurement</b> while driving <b>substantial algorithmic improvements to the attack itself</b>—fixing a broken polynomial and pushing the verified cost down to <b>2<sup>115.70</sup></b>.</p><p class="author-byline">By <span class="who">Julio de Mello Bezerra and Youssef El Housni</span></p><div class="remark-box" role="note" aria-label="Author remark on post-November 6 advancements"><span class="remark-box-title">Remark · Post-06/11 Advancements</span>This article was originally written based on CurveSmash submissions up to <b>06/11</b> (which reached <b>2<sup>119.48</sup></b>). Major advancements occurred in the subsequent days (06/11–08/11), driving the verified cost down to <b>2<sup>115.70</sup></b> (<code>2<sup>115.6983</sup></code>). These post-06/11 breakthroughs are briefly summarized in the <a href="#curvesmash" class="ext-link"><b>timeline ladder and math deep-dive</b></a> in Section 04.</div></div></header><section id="one-sieve"><div class="col"><h2><span class="idx">01 · One Sieve to Rule Three Tracks</span>Why a finite-field DLP oracle breaks both curves and pairings</h2><p>The <a href="https://yukon.org/curvesmash" target="_blank" rel="noreferrer" class="ext-link">CurveSmash challenge</a> on Yukon replaces asymptotic hand-waving with containerized, instruction-metered cryptanalysis. Every submission must supply a complete mathematical proof alongside executable C, AArch64 assembly, and Python verification scripts audited via Callgrind.</p><p>Of CurveSmash’s six tracks, three are governed by elliptic-curve group attacks (Pollard’s <span>\(\rho\)</span> and Cheon’s algorithm). The best submissions on the <strong>other three tracks</strong> are all powered by a single finite-field engine: the <strong>Special Tower Number Field Sieve (STNFS)</strong> on BLS12-381:</p><ul><li><strong>Plain <span>\(G_1\)</span> DLP (<code>bls12-381-g1-ecdlp-plain</code>):</strong> Given <span>\(P_0 \in G_1\)</span> and <span>\(T = [x]P_0\)</span>, recover the <span>\(255\)</span>-bit scalar <span>\(x \in \mathbb{F}_r\)</span>.</li><li><strong>Fixed-Argument Pairing Inversion 1 — FAPI-1 (<code>bls12-381-fixed-g1-invert-g2</code>):</strong> Given <span>\(P \in G_1 \setminus \{\mathcal{O}\}\)</span> and <span>\(z \in G_T\)</span>, find <span>\(Q \in G_2\)</span> such that <span>\(e(P, Q) = z\)</span>.</li><li><strong>Fixed-Argument Pairing Inversion 2 — FAPI-2 (<code>bls12-381-fixed-g2-invert-g1</code>):</strong> Given <span>\(Q \in G_2 \setminus \{\mathcal{O}\}\)</span> and <span>\(z \in G_T\)</span>, find <span>\(P \in G_1\)</span> such that <span>\(e(P, Q) = z\)</span>.</li></ul><p>Attacking <span>\(G_1\)</span> or <span>\(G_2\)</span> directly on the curve requires <span>\(\approx \sqrt{\pi r / 4} \approx 2^{127.2}\)</span> group operations via Pollard’s <span>\(\rho\)</span>. However, the optimal ate pairing <span>\(e : G_1 \times G_2 \to G_T \subset \mathbb{F}_{p^{12}}^*\)</span> is <strong>bilinear</strong>: <span>\(e([a]P, [b]Q) = e(P, Q)^{ab}\)</span>. It acts as a bridge that transports problems from the elliptic curve into the <span>\(4569\)</span>-bit extension field <span>\(\mathbb{F}_{p^{12}}^*\)</span>—where index calculus runs orders of magnitude faster.</p></div><figure><svg viewBox="0 0 820 295" role="img" aria-label="Bilinear pairing bridge transporting G1 DLP, FAPI-1, and FAPI-2 into a single STNFS oracle in F_p^12"><defs><marker id="ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><polygon points="0,1 9,5 0,9" fill="currentColor"></polygon></marker><marker id="ah-moves" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><polygon points="0,1 9,5 0,9" fill="var(--moves)"></polygon></marker></defs><text x="20" y="26" font-family="JetBrains Mono, monospace" font-size="13" font-weight="500" fill="currentColor" letter-spacing=".6">THE BILINEAR BRIDGE — e([a]P, [b]Q) = e(P, Q)^(ab) COLLAPSES ALL THREE TRACKS</text><g font-family="Inter, sans-serif"><rect x="20" y="46" width="245" height="66" rx="5" fill="none" stroke="currentColor" stroke-width="1.4"></rect><text x="34" y="72" font-size="15" font-weight="600" fill="var(--ink)">1. Plain G₁ DLP (MOV)</text><text x="34" y="95" font-family="JetBrains Mono, monospace" font-size="13" fill="currentColor">Given P₀, T = [x]P₀ ∈ G₁</text><rect x="20" y="128" width="245" height="66" rx="5" fill="var(--moves-soft)" stroke="var(--moves)" stroke-width="1.8"></rect><text x="34" y="154" font-size="15" font-weight="600" fill="var(--moves)">2. FAPI-1 (invert G₂)</text><text x="34" y="177" font-family="JetBrains Mono, monospace" font-size="13" fill="var(--ink)">Given P ∈ G₁, z ∈ G_T → Q</text><rect x="20" y="210" width="245" height="66" rx="5" fill="none" stroke="currentColor" stroke-width="1.4"></rect><text x="34" y="236" font-size="15" font-weight="600" fill="var(--ink)">3. FAPI-2 (invert G₁)</text><text x="34" y="259" font-family="JetBrains Mono, monospace" font-size="13" fill="currentColor">Given Q ∈ G₂, z ∈ G_T → P</text></g><g stroke="currentColor" stroke-width="1.6" fill="none" marker-end="url(#ah-ink)" opacity=".65"><path d="M265 79 L322 132"></path><path d="M265 243 L322 190"></path></g><line x1="265" y1="161" x2="322" y2="161" stroke="var(--moves)" stroke-width="2" marker-end="url(#ah-moves)"></line><rect x="330" y="76" width="210" height="170" rx="6" fill="var(--surface)" stroke="var(--moves)" stroke-width="2.2"></rect><text x="435" y="108" font-family="JetBrains Mono, monospace" font-size="15" font-weight="600" fill="var(--moves)" text-anchor="middle">STNFS ORACLE</text><text x="435" y="132" font-family="JetBrains Mono, monospace" font-size="14" font-weight="500" fill="var(--ink)" text-anchor="middle">in G_T ⊂ F*_(p¹²)</text><line x1="352" y1="146" x2="518" y2="146" stroke="var(--rule)" stroke-width="1"></line><text x="435" y="170" font-family="Inter, sans-serif" font-size="13.5" fill="currentColor" text-anchor="middle">1 Factor-Base Log DB</text><text x="435" y="194" font-family="Inter, sans-serif" font-size="13.5" font-weight="600" fill="var(--moves)" text-anchor="middle">+ 2 q-descent queries</text><text x="435" y="222" font-family="JetBrains Mono, monospace" font-size="13.5" fill="var(--ink)" text-anchor="middle">Solves z = z₀^y (mod r)</text><g stroke="currentColor" stroke-width="1.6" fill="none" marker-end="url(#ah-ink)" opacity=".65"><path d="M540 132 L594 79"></path><path d="M540 190 L594 243"></path></g><line x1="540" y1="161" x2="594" y2="161" stroke="var(--moves)" stroke-width="2" marker-end="url(#ah-moves)"></line><g font-family="JetBrains Mono, monospace"><rect x="602" y="46" width="198" height="66" rx="5" fill="none" stroke="currentColor" stroke-width="1.4"></rect><text x="701" y="73" font-size="14.5" font-weight="600" fill="var(--ink)" text-anchor="middle">x = log_(z₀)(z_T)</text><text x="701" y="96" font-family="Inter, sans-serif" font-size="13" fill="currentColor" text-anchor="middle">recovers x ∈ F_r</text><rect x="602" y="128" width="198" height="66" rx="5" fill="var(--moves-soft)" stroke="var(--moves)" stroke-width="1.8"></rect><text x="701" y="155" font-size="14.5" font-weight="600" fill="var(--moves)" text-anchor="middle">Q = [y]Q₀ ∈ G₂</text><text x="701" y="178" font-size="12.5" fill="var(--ink)" text-anchor="middle">e(P, [y]Q₀) = z₀^y = z</text><rect x="602" y="210" width="198" height="66" rx="5" fill="none" stroke="currentColor" stroke-width="1.4"></rect><text x="701" y="237" font-size="14.5" font-weight="600" fill="var(--ink)" text-anchor="middle">P = [x]P₀ ∈ G₁</text><text x="701" y="260" font-size="12.5" fill="currentColor" text-anchor="middle">e([x]P₀, Q) = z₀^x = z</text></g></svg><figcaption><b>One oracle, three tracks.</b> Evaluating the pairing with an arbitrary generator <span>\(Q_0 \in G_2\)</span> (or <span>\(P_0 \in G_1\)</span>) maps each curve challenge to a discrete logarithm <span>\(z = z_0^y\)</span> in <span>\(G_T \subset \mathbb{F}_{p^{12}}^*\)</span>. One scalar multiplication then reconstructs the required curve point.</figcaption></figure><div class="col"><details class="code-fold"><summary><span>Algebraic Reductions · MOV, FAPI-1, and FAPI-2 to G<sub>T</sub> DLP</span><span>click to expand</span></summary><div class="fold-body"><p><b>1. Plain DLP on <span>\(G_1\)</span> (MOV Reduction):</b> Pick any fixed generator <span>\(Q_0 \in G_2 \setminus \{\mathcal{O}\}\)</span> and compute <span>\(z_0 = e(P_0, Q_0)\)</span> and <span>\(z_T = e(T, Q_0) = e([x]P_0, Q_0) = z_0^x\)</span> in <span>\(G_T\)</span>. Solving the discrete log <span>\(z_T = z_0^x\)</span> in <span>\(\mathbb{F}_{p^{12}}^*\)</span> directly yields <span>\(x \pmod r\)</span>.</p><p><b>2. FAPI-1 (Invert <span>\(G_2\)</span> for fixed <span>\(P \in G_1\)</span>):</b> Pick any generator <span>\(Q_0 \in G_2\)</span>, compute <span>\(z_0 = e(P, Q_0) \in G_T\)</span>, and use the STNFS oracle to find <span>\(y \in \mathbb{F}_r\)</span> such that <span>\(z = z_0^y\)</span>. Return <span>\(Q = [y]Q_0 \in G_2\)</span>, which satisfies <span>\(e(P, Q) = e(P, Q_0)^y = z_0^y = z\)</span>.</p><p><b>3. FAPI-2 (Invert <span>\(G_1\)</span> for fixed <span>\(Q \in G_2\)</span>):</b> Symmetrically pick <span>\(P_0 \in G_1 \setminus \{\mathcal{O}\}\)</span>, set <span>\(z_0 = e(P_0, Q)\)</span>, solve <span>\(z = z_0^x\)</span> in <span>\(G_T\)</span>, and return <span>\(P = [x]P_0 \in G_1\)</span>.</p></div></details></div></section><section id="tower-sieve"><div class="col"><h2><span class="idx">02 · From NFS to TNFS to STNFS</span>Lifting to a 12-dimensional number field tower</h2><p>In a finite field <span>\(\mathbb{F}_{p^{12}}^*\)</span>, arithmetic wraps around modulo <span>\(p\)</span>, destroying any notion of “size” or unique factorization into small primes. Index calculus restores factorization by <strong>lifting</strong> the problem to characteristic zero: we construct two algebraic number rings <span>\(\mathcal{O}_{K_f}\)</span> and <span>\(\mathcal{O}_{K_g}\)</span> that share a common homomorphism down to <span>\(\mathbb{F}_{p^{12}}\)</span>. Up in these rings, elements factor uniquely into prime ideals, whose size is measured by their integer <strong>norm</strong> <span>\(N(\cdot) \in \mathbb{Z}\)</span>. Fixing a smoothness bound <span>\(B\)</span>, we collect all prime ideals of norm <span>\(&lt; B\)</span> on both sides into a <strong>factor base</strong> of size <span>\(U \approx \text{Li}(B)\)</span>.</p><p>Whenever a sieved candidate pair <span>\((a, b)\)</span>, <span>\(a - bX\)</span>, generates principal ideals whose integer norms <span>\(N_f, N_g \in \mathbb{Z}\)</span> factor completely into <strong><span>\(B\)</span>-smooth</strong> primes (primes <span>\(q &lt; B\)</span>), pushing both factorizations down to <span>\(\mathbb{F}_{p^{12}}^*\)</span> equates the two sides. Because prime ideals upstairs are not elements of <span>\(\mathbb{F}_{p^{12}}^*\)</span> directly, we assign each factor-base ideal <span>\(\mathfrak{p}\)</span> an unknown weight modulo <span>\(r\)</span> called its <strong>virtual logarithm</strong> <span>\(\log \mathfrak{p}\)</span>. Each doubly <span>\(B\)</span>-smooth pair then yields one linear equation modulo <span>\(r\)</span> connecting those <span>\(U\)</span> unknowns. To obtain a full-rank system that can be solved directly via sparse linear algebra (Block Wiedemann), we must collect more distinct smooth relations <span>\(R_{\text{found}}\)</span> than factor-base unknowns <span>\(U\)</span>:</p><div class="math-display">$$R_{\text{found}} \;=\; V \cdot E \;&gt;\; U \;\approx\; \text{Li}(B),$$</div><p>where <span>\(V\)</span> is the usable sieving volume and <span>\(E\)</span> is <strong>Murphy’s <span>\(E\)</span></strong>—the average probability over the sieve region that a candidate is simultaneously <span>\(B\)</span>-smooth on both sides. Accurately estimating <span>\(V \cdot E\)</span> versus <span>\(U\)</span>—and above all the joint smoothness probability <span>\(E\)</span>—is by far the hardest part of analyzing the sieve.</p><p>Why build a <strong>tower</strong>? Classical NFS lifts <span>\(\mathbb{F}_{p^{12}}\)</span> in a single degree-<span>\(12\)</span> jump over <span>\(\mathbb{Q}\)</span> and sieves integer pairs <span>\((a, b) \in \mathbb{Z}^2\)</span>, forcing <span>\(|a|, |b| \approx 2^{60}\)</span> and causing the norms to explode. The <strong>Tower Number Field Sieve (TNFS)</strong><a href="#ref-1" id="cite-1a" class="cite-ref">[1]</a> mirrors the composite extension <span>\(12 = \eta \cdot \kappa = 6 \cdot 2\)</span>—it first builds a degree-<span>\(6\)</span> base field <span>\(K_h = \mathbb{Q}(y)\)</span>, and then sieves degree-<span>\(1\)</span> polynomials <span>\(a - bX\)</span> whose coefficients <span>\(a, b\)</span> are polynomials in <span>\(y\)</span> inside <span>\(\mathcal{O}_{K_h} \cong \mathbb{Z}^6\)</span>. Spreading the search volume <span>\(V\)</span> across <strong><span>\(12\)</span> dimensions</strong> shrinks each integer coordinate to <span>\(A \approx 600\)</span> (<span>\(&lt; 10\)</span> bits).</p></div><figure><svg viewBox="0 0 820 325" role="img" aria-label="Mathematical Y-diagram of the Number Field Tower K_f, K_g over K_h over Q and the Commutative Diagram mapping a - bX to F_p^12"><defs><marker id="cd-arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><polygon points="0,1.2 9,5 0,8.8" fill="currentColor"></polygon></marker><marker id="cd-arrow-blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><polygon points="0,1.2 9,5 0,8.8" fill="var(--moves)"></polygon></marker><marker id="mapsto-bar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><line x1="5" y1="1" x2="5" y2="9" stroke="currentColor" stroke-width="1.8"></line></marker><marker id="mapsto-bar-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><line x1="5" y1="1" x2="5" y2="9" stroke="var(--moves)" stroke-width="1.8"></line></marker></defs><text x="185" y="26" font-family="JetBrains Mono, monospace" font-size="12.5" font-weight="500" fill="currentColor" text-anchor="middle" letter-spacing=".6">NUMBER FIELD TOWER</text><text x="595" y="26" font-family="JetBrains Mono, monospace" font-size="12.5" font-weight="500" fill="currentColor" text-anchor="middle" letter-spacing=".6">TWO-SIDED COMMUTATIVE DIAGRAM</text><text x="76" y="68" font-family="Georgia, Times New Roman, serif" font-size="24" font-style="italic" font-weight="600" fill="var(--moves)" text-anchor="middle">K<tspan dy="6" font-size="16">f</tspan></text><text x="76" y="92" font-family="JetBrains Mono, monospace" font-size="12" fill="currentColor" text-anchor="middle">[K<tspan dy="3" font-size="9.5">f</tspan><tspan dy="-3"> : ℚ] = 72</tspan></text><text x="292" y="108" font-family="Georgia, Times New Roman, serif" font-size="24" font-style="italic" font-weight="600" fill="var(--ink)" text-anchor="middle">K<tspan dy="6" font-size="16">g</tspan></text><text x="292" y="132" font-family="JetBrains Mono, monospace" font-size="12" fill="currentColor" text-anchor="middle">[K<tspan dy="3" font-size="9.5">g</tspan><tspan dy="-3"> : ℚ] = 12</tspan></text><line x1="94" y1="98" x2="175" y2="178" stroke="var(--moves)" stroke-width="2.2"></line><text x="118" y="148" font-family="JetBrains Mono, monospace" font-size="14" font-weight="600" fill="var(--moves)" text-anchor="end">12</text><line x1="274" y1="136" x2="207" y2="178" stroke="var(--ink)" stroke-width="2.2"></line><text x="252" y="165" font-family="JetBrains Mono, monospace" font-size="14" font-weight="600" fill="var(--ink)" text-anchor="start">2</text><text x="190" y="204" font-family="Georgia, Times New Roman, serif" font-size="24" font-style="italic" font-weight="600" fill="var(--ink)" text-anchor="middle">K<tspan dy="6" font-size="16">h</tspan></text><line x1="190" y1="216" x2="190" y2="264" stroke="currentColor" stroke-width="2.2"></line><text x="206" y="246" font-family="JetBrains Mono, monospace" font-size="14" font-weight="600" fill="currentColor">6</text><text x="190" y="290" font-family="Georgia, Times New Roman, serif" font-size="24" font-weight="600" fill="var(--ink)" text-anchor="middle">ℚ</text><line x1="376" y1="38" x2="376" y2="308" stroke="var(--rule)" stroke-width="1.2"></line><text x="595" y="56" font-family="Georgia, Times New Roman, serif" font-size="23" font-weight="600" fill="var(--ink)" text-anchor="middle">𝒪<tspan dy="5" font-size="15" font-style="italic">K</tspan><tspan dy="4" font-size="11.5" font-style="italic">h</tspan><tspan dy="-9" font-size="21" font-weight="400">[X]</tspan></text><text x="595" y="98" font-family="Georgia, Times New Roman, serif" font-size="16.5" font-style="italic" fill="var(--ink)" text-anchor="middle">a − bX</text><line x1="548" y1="64" x2="448" y2="152" stroke="var(--moves)" stroke-width="1.8" marker-end="url(#cd-arrow-blue)"></line><text x="484" y="102" font-family="JetBrains Mono, monospace" font-size="12.5" fill="var(--moves)" text-anchor="end">mod f<tspan dy="3" font-size="9.5">y</tspan><tspan dy="-3">(X)</tspan></text><line x1="642" y1="64" x2="742" y2="152" stroke="currentColor" stroke-width="1.8" marker-end="url(#cd-arrow)"></line><text x="706" y="102" font-family="JetBrains Mono, monospace" font-size="12.5" fill="currentColor" text-anchor="start">mod g<tspan dy="3" font-size="9.5">y</tspan><tspan dy="-3">(X)</tspan></text><line x1="572" y1="108" x2="514" y2="162" stroke="var(--moves)" stroke-width="1.4" opacity=".85" marker-start="url(#mapsto-bar-blue)" marker-end="url(#cd-arrow-blue)"></line><line x1="618" y1="108" x2="676" y2="162" stroke="currentColor" stroke-width="1.4" opacity=".75" marker-start="url(#mapsto-bar)" marker-end="url(#cd-arrow)"></line><text x="432" y="180" font-family="Georgia, Times New Roman, serif" font-size="23" font-weight="600" fill="var(--moves)" text-anchor="middle">𝒪<tspan dy="5" font-size="15" font-style="italic">K</tspan><tspan dy="4" font-size="11.5" font-style="italic">f</tspan></text><text x="498" y="180" font-family="Georgia, Times New Roman, serif" font-size="17" font-style="italic" font-weight="600" fill="var(--moves)" text-anchor="middle">β<tspan dy="4" font-size="12">f</tspan></text><text x="692" y="180" font-family="Georgia, Times New Roman, serif" font-size="17" font-style="italic" font-weight="600" fill="var(--ink)" text-anchor="middle">β<tspan dy="4" font-size="12">g</tspan></text><text x="758" y="180" font-family="Georgia, Times New Roman, serif" font-size="23" font-weight="600" fill="var(--ink)" text-anchor="middle">𝒪<tspan dy="5" font-size="15" font-style="italic">K</tspan><tspan dy="4" font-size="11.5" font-style="italic">g</tspan></text><line x1="514" y1="192" x2="578" y2="242" stroke="var(--moves)" stroke-width="1.4" opacity=".85" marker-start="url(#mapsto-bar-blue)" marker-end="url(#cd-arrow-blue)"></line><line x1="676" y1="192" x2="612" y2="242" stroke="currentColor" stroke-width="1.4" opacity=".75" marker-start="url(#mapsto-bar)" marker-end="url(#cd-arrow)"></line><line x1="448" y1="202" x2="552" y2="286" stroke="var(--moves)" stroke-width="1.8" marker-end="url(#cd-arrow-blue)"></line><text x="484" y="254" font-family="JetBrains Mono, monospace" font-size="12.5" fill="var(--moves)" text-anchor="end">ψ<tspan dy="3" font-size="9.5">f</tspan><tspan dy="-3"> (mod p)</tspan></text><line x1="742" y1="202" x2="638" y2="286" stroke="currentColor" stroke-width="1.8" marker-end="url(#cd-arrow)"></line><text x="706" y="254" font-family="JetBrains Mono, monospace" font-size="12.5" fill="currentColor" text-anchor="start">ψ<tspan dy="3" font-size="9.5">g</tspan><tspan dy="-3"> (mod p)</tspan></text><text x="595" y="256" font-family="Georgia, Times New Roman, serif" font-size="17.5" font-style="italic" font-weight="600" fill="var(--ink)" text-anchor="middle">z</text><text x="595" y="298" font-family="Georgia, Times New Roman, serif" font-size="24" font-weight="600" fill="var(--ink)" text-anchor="middle">𝔽<tspan dy="6" font-size="15">p¹²</tspan></text></svg><figcaption><b>The STNFS tower and commutative diagram.</b> Left: this diagram yields the best results by pairing a degree-<span>\(6\)</span> base field <span>\(K_h\)</span> with asymmetric top extensions. Right: reducing <span>\(a - bX\)</span> along both branches yields elements <span>\(\beta_f \in \mathcal{O}_{K_f}\)</span> and <span>\(\beta_g \in \mathcal{O}_{K_g}\)</span> that map to the exact same element <span>\(z \in \mathbb{F}_{p^{12}}\)</span>.</figcaption></figure><div class="col"><h3>How the curve seed u powers the Special TNFS (STNFS)</h3><p>Even with a tower (<span>\(\eta = 6, \kappa = 2\)</span>), a generic prime <span>\(p\)</span> forces the top polynomials <span>\(f_y, g_y\)</span> to have huge coefficients (on the order of <span>\(p^{1/3}\)</span>). The <strong>Special</strong> TNFS (STNFS) exploits the fact that BLS12-381’s <span>\(381\)</span>-bit prime <span>\(p\)</span> is parameterized by a <span>\(64\)</span>-bit integer seed <span>\(u\)</span> via <span>\(3p = \Gamma(u) = u^6 - 2u^5 + 2u^3 + u + 1\)</span>. Setting <span>\(g_y(X) = X^2 - uy\)</span> (degree <span>\(2\)</span>) and substituting <span>\(u = X^2/y\)</span> into <span>\(\Gamma(u)\)</span> gives a degree-<span>\(12\)</span> polynomial <span>\(f_y(X) = y^6\Gamma(X^2/y) \bmod h(y)\)</span> whose coefficients drop from <span>\(\sim 2^{127}\)</span> down to <strong><span>\(1\)</span> bit</strong> (<span>\(\|f_y\|_\infty = 2\)</span>).</p></div><div class="panel"><div class="panel-head"><p class="panel-title">Tower Decomposition Explorer — Why η = 6, κ = 2 is the Sweet Spot</p><div class="scaletoggle" role="group" aria-label="Tower split selector"><button type="button" aria-pressed="false">η=12, κ=1</button><button type="button" aria-pressed="true">η=6, κ=2 ★</button><button type="button" aria-pressed="false">η=4, κ=3</button><button type="button" aria-pressed="false">η=3, κ=4</button><button type="button" aria-pressed="false">η=2, κ=6</button><button type="button" aria-pressed="false">η=1, κ=12</button></div></div><div class="slider-grid"><div><svg viewBox="0 0 500 185" role="img" aria-label="Combined norm bit-length across tower splits"><g><line x1="46" y1="135.4047619047619" x2="484" y2="135.4047619047619" stroke="currentColor" stroke-width="1" opacity="0.15"></line><text x="39" y="139.4047619047619" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.7">625b</text></g><g><line x1="46" y1="88.61904761904762" x2="484" y2="88.61904761904762" stroke="currentColor" stroke-width="1" opacity="0.15"></line><text x="39" y="92.61904761904762" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.7">850b</text></g><g><line x1="46" y1="36.63492063492063" x2="484" y2="36.63492063492063" stroke="currentColor" stroke-width="1" opacity="0.15"></line><text x="39" y="40.63492063492063" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.7">1100b</text></g><line x1="46" y1="151" x2="484" y2="151" stroke="currentColor" stroke-width="1" opacity="0.4"></line><g style="cursor:pointer"><rect x="60.5" y="111.07619047619048" width="44" height="39.923809523809524" rx="3" fill="var(--fixed)" opacity="0.25"></rect><text x="82.5" y="105.07619047619048" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" font-weight="400">742b</text><text x="82.5" y="169" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.65">12×1</text></g><g style="cursor:pointer"><rect x="133.5" y="135.4047619047619" width="44" height="15.595238095238102" rx="3" fill="var(--moves)" opacity="0.92"></rect><text x="155.5" y="129.4047619047619" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="var(--moves)" font-weight="600">625b</text><text x="155.5" y="169" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="1">6×2</text></g><g style="cursor:pointer"><rect x="206.5" y="124.38412698412698" width="44" height="26.61587301587302" rx="3" fill="var(--fixed)" opacity="0.25"></rect><text x="228.5" y="118.38412698412698" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" font-weight="400">678b</text><text x="228.5" y="169" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.65">4×3</text></g><g style="cursor:pointer"><rect x="279.5" y="112.53174603174604" width="44" height="38.46825396825396" rx="3" fill="var(--fixed)" opacity="0.25"></rect><text x="301.5" y="106.53174603174604" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" font-weight="400">735b</text><text x="301.5" y="169" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.65">3×4</text></g><g style="cursor:pointer"><rect x="352.5" y="86.53968253968253" width="44" height="64.46031746031747" rx="3" fill="var(--fixed)" opacity="0.25"></rect><text x="374.5" y="80.53968253968253" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" font-weight="400">860b</text><text x="374.5" y="169" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.65">2×6</text></g><g style="cursor:pointer"><rect x="425.5" y="32.476190476190474" width="44" height="118.52380952380952" rx="3" fill="var(--fixed)" opacity="0.25"></rect><text x="447.5" y="26.476190476190474" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" font-weight="400">1120b</text><text x="447.5" y="169" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.65">1×12</text></g></svg></div><div class="dstat"><div class="dstat-row"><span class="dstat-k">selected extension split</span><span class="dstat-v">η = 6, κ = 2</span></div><div class="dstat-row"><span class="dstat-k">sieve dimension (2η)</span><span class="dstat-v">12D lattice</span></div><div class="dstat-row"><span class="dstat-k">avg norm product log₂(N_f · N_g)</span><span class="dstat-v" style="color:var(--moves)">625 bits</span></div><div class="dstat-row"><span class="dstat-k">net complexity penalty vs 6×2</span><span class="dstat-v">0.00 bits (optimal)</span></div><div class="verdict ok">Minimizes N_f·N_g at 128-bit scale and unlocks free Galois involution σ: X ↦ −X (halves factor base U).</div></div></div></div><div class="col"><details class="code-fold"><summary><span>BLS12-381 Polynomials, Infinite Units &amp; The Schirokauer Map</span><span>click to expand</span></summary><div class="fold-body"><p><b>Curve Seed &amp; Polynomials:</b> BLS12-381 is parameterized by a <span>\(64\)</span>-bit seed <span>\(u\)</span>, with <span>\(381\)</span>-bit base prime <span>\(3p = \Gamma(u) := u^6 - 2u^5 + 2u^3 + u + 1\)</span> and <span>\(255\)</span>-bit subgroup prime <span>\(r = u^4 - u^2 + 1\)</span>. With <code>@gbotrel</code>’s base polynomial <span>\(h(Y) = Y^6 + Y^3 + Y^2 - Y - 1\)</span>, the top polynomials are:</p><div class="math-display">$$g_y(X) = X^2 - uy, \qquad f_y(X) = y^6 \Gamma(X^2/y) \bmod h(y) = X^{12} - 2yX^{10} + 2y^3X^6 + y^5X^2 + y^6 + y^5 + 1.$$</div><p><b>Why Infinite Units Create Redundant Ideals:</b> In <span>\(\mathbb{Z}\)</span>, the only invertible elements (units) are <span>\(\{\pm 1\}\)</span>. In a number ring <span>\(\mathcal{O}_K\)</span>, however, there may be <strong>infinitely many units</strong> <span>\(\varepsilon \in \mathcal{O}_K^\times\)</span> (as is the case in our rings <span>\(\mathcal{O}_{K_h}, \mathcal{O}_{K_f}, \mathcal{O}_{K_g}\)</span>). Multiplying any candidate pair <span>\((a, b)\)</span> by a unit <span>\(\varepsilon \in \mathcal{O}_{K_h}^\times\)</span> produces a different integer tuple inside the sieve region that generates the <em>exact same principal ideal</em>—yielding a redundant duplicate relation that adds zero rank to the linear system.</p><p><b>How the Schirokauer Map Resolves Unit Ambiguity:</b> Even when a principal ideal factors uniquely into prime ideals <span>\(\prod \mathfrak{p}_i^{e_i}\)</span>, ideal equality only determines the element up to an unknown unit factor <span>\(u \in \mathcal{O}_K^\times\)</span>. Computing fundamental units explicitly in degree-72 fields is infeasible; instead, STNFS uses <strong>Schirokauer maps</strong>—efficiently computable linear maps modulo <span>\(r\)</span> evaluated directly on the polynomial coefficients—to append a few dozen extra columns to the matrix that automatically absorb all unit contributions modulo <span>\(r\)</span>.</p></div></details></div><div class="panel"><div class="panel-head"><p class="panel-title">From Smoothness to STNFS, step by step</p><p class="hint">five progressive stages — click a number or use the buttons</p></div><div class="steps-nav" role="group" aria-label="tower construction steps"><button type="button" class="step-dot" aria-pressed="true">01</button><button type="button" class="step-dot" aria-pressed="false">02</button><button type="button" class="step-dot" aria-pressed="false">03</button><button type="button" class="step-dot" aria-pressed="false">04</button><button type="button" class="step-dot" aria-pressed="false">05</button></div><div><span class="step-phase">step 1 · lifting &amp; smoothness</span><h3 class="step-title">Lift \(\mathbb{F}_{p^{12}}\) to characteristic zero where norms can factor</h3><div class="step-row"><div class="step-k">algebraic structure</div><div class="step-v formula">$$(z)\mathcal{O}_K = \prod \mathfrak{p}_i^{e_i} \;\;(\text{norm } N(\mathfrak{p}_i) \le B) \quad\Longleftrightarrow\quad |N_{K/\mathbb{Q}}(z)| \in \mathbb{Z} \text{ is } B\text{-smooth}$$</div></div><div class="step-row"><div class="step-k">why it works</div><div class="step-v">Finite-field elements wrap around modulo \(p\) and cannot be factored into small primes. Lifting to a number ring \(\mathcal{O}_K\) lets us measure size via the integer norm \(N(z) \in \mathbb{Z}\): whenever \(N(z)\) factors into primes \(&lt; B\) (called <b>\(B\)-smooth</b>), taking discrete logs modulo \(r\) turns multiplication into a linear equation among virtual logarithms.</div></div><div class="step-row"><div class="step-k">norm &amp; scaling impact</div><div class="step-v cost"><div class="cost-split"><span class="cost-general">Problem with 1 ring: only gives 1 side of an equation (an unfactored target remains)</span><span class="cost-specific">Fix: intersect two rings \(\mathcal{O}_{K_f}\) and \(\mathcal{O}_{K_g}\) sharing a root modulo \(p\)</span></div></div></div></div><div class="step-foot"><div class="unknown"><div class="unknown-lab"><span>typical norm product <span>\(\log_2(N_f \cdot N_g)\)</span> to test for <span>\(B\)</span>-smoothness</span><span>1380 bits combined norm product</span></div><div class="unknown-track"><span class="unknown-fill" style="width:100%"></span></div></div><div class="navbtns"><button type="button" class="navbtn" disabled="">← prev</button><button type="button" class="navbtn">next →</button></div></div></div></section><section id="accounting"><div class="col"><h2><span class="idx">03 · Pre-CurveSmash Estimates &amp; The Accounting Ruler</span>Why 117–120 bits (B-D), 126.0 bits (G-S), and 115.70 bits (CurveSmash) use different rulers</h2><p>When Kim and Barbulescu introduced the <strong>Extended TNFS (ExTNFS)</strong><a href="#ref-1" class="cite-ref">[1]</a> for composite extension degrees—and combined a degree-<span>\(6\)</span> (<em>sextic</em>) base field with the special polynomial construction for <span>\(p = \Gamma(u)\)</span> to form <strong>SexTNFS</strong> (or the less sexy <strong>STNFS</strong>)—the security of BN-254 dropped below <span>\(110\)</span> bits. Drawing on the <strong>BLS</strong> family of pairing-friendly curves introduced by Barreto, Lynn, and Scott<a href="#ref-2" id="cite-2a" class="cite-ref">[2]</a>, Sean Bowe instantiated <strong>BLS12-381</strong> in 2017 for Zcash’s Sapling upgrade. Two landmark cryptanalytic papers then defined its pre-CurveSmash security estimates: <strong>Barbulescu–Duquesne (B-D, 2019)</strong><a href="#ref-3" id="cite-3a" class="cite-ref">[3]</a>, which estimated BLS12-381 at <strong><span>\(117\text{–}120\)</span> bits</strong> (as cited in <a href="#ref-4" id="cite-4a" class="cite-ref">[4]</a><a href="#ref-5" id="cite-5a" class="cite-ref">[5]</a>), and <strong>Guillevic–Singh (G-S, 2021)</strong><a href="#ref-6" id="cite-6a" class="cite-ref">[6]</a>, which refined the number-theoretic model and raised the estimate to <strong><span>\(126.0\)</span> bits</strong>.</p><p>Comparing those figures to CurveSmash’s <strong><span>\(123.61 \to 119.48 \to 115.70\)</span> bits</strong> requires untangling <strong>two large effects (~7–8 bits each) that pull in opposite directions</strong>:</p><ul><li><strong>1. The Unit-Conversion Discount (<span>\(\approx -7.1\)</span> bits numerically):</strong> B-D and G-S count abstract elementary operations (<span>\(\approx 1\)</span> cycle or <span>\(\ln\ln B \approx 4.19\)</span> ops per sieved cell). CurveSmash measures compiled AArch64 instructions and divides by <span>\(C = 20{,}000 \approx 2^{14.29}\)</span> instructions (one <span>\(\mathbb{F}_{p^{12}}\)</span> multiplication on the FAPI tracks, or <span>\(C = 2{,}000\)</span> on the plain <span>\(G_1\)</span> DLP track). Merely re-denominating G-S’s <span>\(126.0\)</span> abstract bits into CurveSmash’s ruler lowers the numerical score by <span>\(\sim 7.1\)</span> bits to <strong><span>\(\approx 118.9\)</span> CS bits</strong> (and B-D to <span>\(\approx 108\text{–}112\)</span> CS bits).</li><li><strong>2. The Missing-Mathematics Penalty (<span>\(\approx +7\text{ to }+8\)</span> bits of real work):</strong> B-D and G-S sieved a 12D hypercube <span>\([-A, A]^{12}\)</span> without noticing that <strong><span>\(88\%\)</span> of smooth pairs in the box are free-unit duplicates</strong> <span>\((\varepsilon a, \varepsilon b)\)</span> under <span>\(\mathcal{O}_{K_h}^\times\)</span> (<span>\(+3.05\)</span> bits). They also assumed <span>\(100\%\)</span> zero-loss threshold/ECM recovery (<span>\(+0.3\)</span> bits), hardcoded optimistic filtering factors at <span>\(1.0\times\)</span> excess (<span>\(+1.85\)</span> bits), and omitted the <span>\(2\)</span>-target individual logarithm <span>\(\mathfrak{q}\)</span>-descent, which forces the smoothness bound up from <span>\(B = 2^{65.3}\)</span> to <span>\(B = 2^{69}\)</span> (<span>\(+2.3\)</span> bits).</li></ul><p>When you apply both adjustments to G-S’s box-sieve model, the <span>\(-7.1\)</span>-bit ruler discount and the <span>\(+7.5\)</span>-bit missing-math penalty cancel out—putting a valid, corrected G-S box-sieve attack at <strong><span>\(\sim 126.4\)</span> CurveSmash bits</strong> (<span>\(\sim 133.5\)</span> abstract G-S bits). CurveSmash contributors then invented real algorithmic breakthroughs that drove that true cost down to <strong><span>\(119.48\)</span> CS bits</strong> by Nov 6 and <strong><span>\(115.70\)</span> CS bits</strong> by Nov 8.</p></div><div class="panel"><div class="panel-head"><p class="panel-title">Interactive Bit-Security Ruler Translator (B-D vs. G-S vs. CurveSmash)</p><div class="scaletoggle" role="group" aria-label="Accounting Ruler"><button type="button" aria-pressed="true">CurveSmash FAPI (C = 20,000)</button><button type="button" aria-pressed="false">CurveSmash G₁ (C = 2,000)</button><button type="button" aria-pressed="false">Abstract Ops (G-S / B-D)</button></div></div><div class="slider-grid"><div class="check-group" role="group" aria-label="Real-world mathematical validity corrections"><div class="mono" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-dim);margin-bottom:4px">Real-World Validity Costs Omitted in B-D &amp; G-S</div><label class="check-item"><span><input type="checkbox" checked=""/>Free-unit orbit deduplication (88% of 12D box is duplicate)</span><span class="pen">+3.05 bits</span></label><label class="check-item"><span><input type="checkbox" checked=""/>Verified clique/Markowitz filtering + threshold &amp; ECM losses</span><span class="pen">+2.15 bits</span></label><label class="check-item"><span><input type="checkbox" checked=""/>2-target 66-node q-descent tree (forces B: 2⁶⁵·³ → 2⁶⁹)</span><span class="pen">+2.30 bits</span></label><div class="mono" style="font-size:11px;color:var(--ink-dim);margin-top:6px;padding-top:8px;border-top:1px solid var(--rule);display:flex;justify-content:space-between"><span>Active missing-math penalty added to B-D / G-S:</span><strong style="color:var(--ink)">+7.50 bits</strong></div></div><div class="dstat"><div class="dstat-row"><span class="dstat-k">unit normalization factor C</span><span class="dstat-v">C = 20,000 inst (−7.10b shift)</span></div><div style="margin:10px 0 6px;padding:10px 12px;background:var(--sunk);border:1px solid var(--rule);border-radius:5px;display:flex;flex-direction:column;gap:9px"><div><div class="mono" style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px"><span style="color:var(--ink);font-weight:500">B-D (2019) + validity costs</span><span style="color:var(--ink);font-weight:600">118.40 bits (110.9b raw + 7.50b)</span></div><div style="position:relative;height:9px;background:var(--surface);border:1px solid var(--rule);border-radius:4px;overflow:hidden"><span style="position:absolute;left:0;top:0;bottom:0;width:45.000000000000014%;background:var(--moves);opacity:0.25;transition:width 0.22s ease"></span><span style="position:absolute;left:0;top:0;bottom:0;width:21.562500000000018%;background:var(--fixed);opacity:0.65;transition:width 0.22s ease"></span></div></div><div><div class="mono" style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px"><span style="color:var(--ink);font-weight:500">G-S (2021) + validity costs</span><span style="color:var(--ink);font-weight:600">126.40 bits (118.9b raw + 7.50b)</span></div><div style="position:relative;height:9px;background:var(--surface);border:1px solid var(--rule);border-radius:4px;overflow:hidden"><span style="position:absolute;left:0;top:0;bottom:0;width:70.00000000000001%;background:var(--moves);opacity:0.25;transition:width 0.22s ease"></span><span style="position:absolute;left:0;top:0;bottom:0;width:46.562500000000014%;background:var(--ink);opacity:0.65;transition:width 0.22s ease"></span></div></div><div><div class="mono" style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px"><span style="color:var(--moves);font-weight:600">CurveSmash (2026) verified</span><span style="color:var(--moves);font-weight:600">115.70 bits</span></div><div style="position:relative;height:9px;background:var(--surface);border:1px solid var(--rule);border-radius:4px;overflow:hidden"><span style="position:absolute;left:0;top:0;bottom:0;width:36.5625%;background:var(--moves);opacity:0.95;transition:width 0.22s ease"></span></div></div><div class="mono" style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-dim);padding-top:3px;border-top:1px dashed var(--rule)"><span>Scale: 104b → 136b</span><span style="color:var(--moves);font-weight:600">CurveSmash vs. G-S gap: −10.70 bits</span></div></div><div class="verdict ok">With all real-world mathematical costs included, G-S's box sieve requires 126.40 bits in this ruler, while CurveSmash's algorithmic breakthroughs reduce the cost by 10.70 bits to 115.70 bits.</div></div></div></div><div class="col"><details class="code-fold"><summary><span>Guillevic–Singh’s Refinements Over Barbulescu–Duquesne · Coprimality ζ(2) &amp; Murphy’s α</span><span>click to expand</span></summary><div class="fold-body"><p><em>The following two number-theoretic refinements were introduced by Guillevic and Singh (G-S, 2021)<a href="#ref-6" class="cite-ref">[6]</a> and were completely absent from Barbulescu and Duquesne (B-D, 2019)<a href="#ref-3" class="cite-ref">[3]</a>:</em></p><p><b>1. Coprimality &amp; the <span>\(1/\zeta_{K_h}(2)\)</span> Factor Shrinking <span>\(V\)</span>:</b> In classical NFS over <span>\(\mathbb{Z}\)</span>, if a pair of integers <span>\((a,b)\)</span> shares a prime factor <span>\(\ell\)</span>, then <span>\((a/\ell, b/\ell)\)</span> generates the exact same relation, so we must restrict the sieve volume to coprime pairs <span>\(\gcd(a,b) = 1\)</span>. Because a prime <span>\(\ell\)</span> divides <span>\(a\)</span> with probability <span>\(1/\ell\)</span> and divides both <span>\(a\)</span> and <span>\(b\)</span> independently with probability <span>\(1/\ell^2\)</span>, the probability that no prime divides both is given by the Euler product over all primes:</p><div class="math-display">$$\begin{aligned}
+\mathbb{P}(\gcd(a,b) = 1) &amp;= \prod_{\ell\text{ prime}} \left(1 - \frac{1}{\ell^2}\right) = \left(\sum_{n=1}^{\infty} \frac{1}{n^2}\right)^{-1} \\
+&amp;= \frac{1}{\zeta(2)} = \frac{6}{\pi^2} \approx 60.8\%,
+\end{aligned}$$</div><p>where <span>\(\zeta(s)\)</span> is the Riemann zeta function. Every number field <span>\(K_h\)</span> has an analogous <strong>Dedekind zeta function</strong> <span>\(\zeta_{K_h}(s)\)</span>, and the probability that <span>\((a,b)\)</span> generate coprime ideals works analogously as <span>\(1/\zeta_{K_h}(2)\)</span>. This factor directly multiplies (shrinks) the usable sieve volume <span>\(V\)</span> in <span>\(R_{\text{found}} = V \cdot E\)</span>, making the attack less effective (whereas B-D ignored this factor).</p><p><b>2. Murphy’s <span>\(\alpha\)</span> (Small-Prime Bias vs. Uniform Random Integers):</b> Values produced by a polynomial resultant <span>\(N_f(a,b)\)</span> do not behave like uniform random integers of the same size when it comes to small prime factors. <strong>Murphy’s <span>\(\alpha\)</span></strong> measures this departure from uniform random divisibility across small primes. B-D assumed <span>\(\alpha = 0\)</span> (treating norms as independent uniform random integers), whereas G-S adapted Murphy’s <span>\(\alpha\)</span> to TNFS and showed that on BLS12-381, the rigid seed-derived polynomials have <span>\(\alpha_f + \alpha_g \approx +4.53\)</span> bits—meaning their norms are depleted of small prime factors, lowering <span>\(E\)</span> and adding bits to the attack cost.</p></div></details></div></section><section id="curvesmash"><div class="col"><h2><span class="idx">04 · Fixing the Tower &amp; Breaking 2<sup>116</sup></span>From G-S’s split quadratic to 119.48 → 115.70 CurveSmash bits</h2><p>When CurveSmash contributors set out to implement Guillevic and Singh’s <span>\(2^{126}\)</span> attack in executable code, they immediately hit a wall: <strong>the base polynomial <span>\(h_{\text{GS}}(Y) = Y^6 - Y^2 + 1\)</span> selected by G-S (Table 11) for BLS12-381 is irreducible both over <span>\(\mathbb{Z}\)</span> and modulo <span>\(p\)</span> — but the tower it builds still collapses.</strong> The defect sits one level up, in <span>\(g_y\)</span>. In the sextic field <span>\(\mathbb{F}_p[Y]/(h_{\text{GS}}(Y)) = \mathbb{F}_{p^6}\)</span>, the element <span>\(u\,y\)</span> is a <em>quadratic residue</em>, so <span>\(g_y = X^2 - u\,y\)</span> factors over <span>\(\mathbb{F}_{p^6}\)</span>: the degree-<span>\(12\)</span> extension never forms and the tower drops to degree <span>\(6\)</span>. The failure survives the obvious check on <span>\(h\)</span> and only shows up as a Legendre symbol computed <em>inside</em> the sextic extension — Euler’s criterion gives <span>\((u\,y)^{(p^6-1)/2} = +1\)</span>. Contributor <strong><code>@gbotrel</code></strong> fixed the foundation by finding <span>\(h(Y) = Y^6 + Y^3 + Y^2 - Y - 1\)</span>, for which <span>\(u\,y\)</span> is a <em>non</em>-residue (<span>\((u\,y)^{(p^6-1)/2} = -1\)</span>), so <span>\(g_y\)</span> stays irreducible and <span>\(\mathbb{F}_{p^{12}}\)</span> is built correctly. Changing <span>\(h\)</span> repairs a defect that lives in <span>\(g\)</span> precisely because it changes <em>which field</em> <span>\(\mathbb{F}_{p^6}\)</span> is, and hence whether <span>\(u\,y\)</span> is square in it.</p><p>Second, instead of selecting candidate pairs <span>\((a, b)\)</span> inside a 12-dimensional hypercube <span>\([-A, A]^{12}\)</span> as in B-D and G-S, <code>@gbotrel</code> reshaped the sieving region into a <strong>12D fibred ellipsoid</strong> <span>\(\{Q_a(a) + Q_b(b) \le A^2\}\)</span> (where <span>\(Q_a, Q_b\)</span> are positive-definite quadratic forms derived from the complex embeddings of <span>\(K_h\)</span>). Because the basis powers <span>\(1, y, \dots, y^5\)</span> have unequal sizes under the complex embeddings of <span>\(K_h\)</span>, the sharp corners of a 12D hypercube extend far along directions where the algebraic norms <span>\(N_f, N_g\)</span> grow needlessly large; rounding the region into an embedding-matched ellipsoid reduces the average norm product by <span>\(\sim 65\)</span> bits at the exact same volume <span>\(V\)</span>.</p></div><figure><svg viewBox="0 0 820 265" role="img" aria-label="Comparison between 12D Hypercube sieve region with high-norm corners and 12D Fibred Ellipsoid sieve region"><text x="200" y="28" font-family="JetBrains Mono, monospace" font-size="13" font-weight="500" fill="currentColor" text-anchor="middle" letter-spacing=".6">12D HYPERCUBE [−A, A]¹² (LITERATURE)</text><text x="615" y="28" font-family="JetBrains Mono, monospace" font-size="13" font-weight="500" fill="var(--moves)" text-anchor="middle" letter-spacing=".6">12D FIBRED ELLIPSOID (CURVESMASH)</text><g transform="translate(55, 48)"><rect x="45" y="18" width="140" height="140" fill="var(--sunk)" stroke="currentColor" stroke-width="1.8" stroke-dasharray="5 4"></rect><circle cx="115" cy="88" r="70" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".35"></circle><circle cx="45" cy="18" r="5.5" fill="var(--ink)"></circle><circle cx="185" cy="18" r="5.5" fill="var(--ink)"></circle><circle cx="45" cy="158" r="5.5" fill="var(--ink)"></circle><circle cx="185" cy="158" r="5.5" fill="var(--ink)"></circle><text x="115" y="84" font-family="Inter, sans-serif" font-size="15" font-weight="600" fill="var(--ink)" text-anchor="middle">Sharp 12D Corners</text><text x="115" y="105" font-family="JetBrains Mono, monospace" font-size="13" fill="currentColor" text-anchor="middle">|a_i|, |b_i| ≤ A</text><text x="145" y="194" font-family="JetBrains Mono, monospace" font-size="13" fill="var(--ink)" text-anchor="middle">Corner norms inflate log₂(N_f·N_g) by +65 bits</text></g><line x1="410" y1="42" x2="410" y2="245" stroke="var(--rule)" stroke-width="1.2"></line><g transform="translate(455, 48)"><ellipse cx="160" cy="88" rx="118" ry="64" transform="rotate(-14 160 88)" fill="var(--moves-soft)" stroke="var(--moves)" stroke-width="2.2"></ellipse><line x1="48" y1="115" x2="272" y2="61" stroke="var(--moves)" stroke-width="1.4" stroke-dasharray="4 4"></line><text x="160" y="82" font-family="JetBrains Mono, monospace" font-size="15" font-weight="600" fill="var(--moves)" text-anchor="middle">Q_a(a) + Q_b(b) ≤ A²</text><text x="160" y="194" font-family="JetBrains Mono, monospace" font-size="13" font-weight="500" fill="var(--moves)" text-anchor="middle">Same volume V · −65 bits smaller norm product</text></g></svg><figcaption><b>Reshaping the 12D sieve region.</b> At the same volume <span>\(V\)</span>, replacing the hypercube <span>\([-A, A]^{12}\)</span> with a 12D fibred ellipsoid aligned to the embeddings of <span>\(K_h\)</span> trims the high-norm corners and shrinks <span>\(\log_2(N_f N_g)\)</span> by <span>\(\sim 65\)</span> bits, substantially boosting Murphy’s <span>\(E\)</span>.</figcaption></figure><div class="col"><p>Third, rather than sieving every prime all the way up to the smoothness bound <span>\(B = 2^{69}\)</span>—which would require tracking an impossibly large factor base in memory—the sieve only processes primes up to a smaller bound <span>\(X_2 = 2^{63}\)</span>. Whenever a candidate’s remaining cofactor after sieving is small enough to potentially split into primes in <span>\([2^{63}, 2^{69}]\)</span>, it is factored on the fly using fast <strong>Suyama Montgomery Elliptic Curve Method (ECM)</strong> cofactorization.</p><p>Fourth, because <code>@gbotrel</code>’s ring <span>\(\mathbb{Z}[y]\)</span> has small index in <span>\(\mathcal{O}_{K_h}\)</span> — so Kummer–Dedekind applies at every odd prime, and a fixed integral basis suffices (full monogenicity is convenient but not required; the best polynomials found later are not monogenic either) — every prime ideal is a concrete <span>\(6\)</span>-dimensional integer lattice that can be written in <strong><span>\(6 \times 6\)</span> Hermite Normal Form (HNF)</strong>. Instead of relying on coarse asymptotic heuristics like <span>\(1/\zeta_{K_h}(2)\)</span>, contributors used exact <span>\(6 \times 6\)</span> HNF lattices to enumerate ideals and obtain much more accurate, certified estimates for coprimality and Murphy’s <span>\(\alpha\)</span>. From the initial valid baseline of <strong><span>\(123.61\)</span> bits</strong>, open-source contributors shaved off <strong><span>\(4.13\)</span> bits</strong> by Nov 6 to break <span>\(2^{120}\)</span> (<strong><span>\(119.48\)</span> bits</strong>), and <strong><span>\(7.91\)</span> bits (<span>\(\approx 240\times\)</span> less work)</strong> by Nov 8 to reach <strong><span>\(115.70\)</span> bits</strong>.</p></div><div class="panel"><div class="panel-head"><p class="panel-title">Evolution of STNFS on BLS12-381 — log<sub>2</sub> work, lower is better</p><div class="scaletoggle" role="group" aria-label="chart scale"><button type="button" aria-pressed="true">full timeline (with literature)</button><button type="button" aria-pressed="false">zoom CurveSmash (123.61 → 115.70)</button></div></div><div class="ladder" role="group" aria-label="CurveSmash optimization milestones"><div><button type="button" class="rung is-projected" aria-pressed="false"><span class="rung-name">Corrected Box Baseline<span class="rung-year"><span class="who">G-S 2021 + missing math in CS units</span> · pre-CurveSmash reference</span></span><span class="track"><span class="baseline-label">corrected box baseline (126.40 bits)</span></span><span class="rung-score">126.40 bits</span></button></div><div><button type="button" class="rung is-projected" aria-pressed="false"><span class="rung-name">Guillevic–Singh (raw)<span class="rung-year"><span class="who">Guillevic &amp; Singh</span> · 2021 · Math. Cryptology (abstract ops)</span></span><span class="track"><span class="bar is-projected" style="width:4.0%"></span></span><span class="rung-score">126.00 bits</span></button></div><div><div class="ladder-divider">Audited CurveSmash Submissions on bls12-381-fixed-g1-invert-g2 (solid)</div><button type="button" class="rung" aria-pressed="false"><span class="rung-name">Milestone 1 · Valid Tower<span class="rung-year"><span class="who">@gbotrel</span> · Oct 27–28, 2026 · PRs #737–#1659</span></span><span class="track"><span class="bar" style="width:26.074766355140188%"></span></span><span class="rung-score">123.61 bits</span></button></div><div><button type="button" class="rung" aria-pressed="false"><span class="rung-name">+ σ-Odd Units &amp; Rerandom<span class="rung-year"><span class="who">@gbotrel, @cryptogakusei</span> · Oct 28, 2026 · PRs #1680–#1792</span></span><span class="track"><span class="bar" style="width:38.31775700934579%"></span></span><span class="rung-score">122.30 bits</span></button></div><div><button type="button" class="rung" aria-pressed="false"><span class="rung-name">+ Certified Shells &amp; N_max<span class="rung-year"><span class="who">@kaankolcu, @mpjunior92, @pepedesigner</span> · Oct 29–31, 2026 · PRs #1830–#2028</span></span><span class="track"><span class="bar" style="width:40.8411214953271%"></span></span><span class="rung-score">122.03 bits</span></button></div><div><button type="button" class="rung" aria-pressed="false"><span class="rung-name">+ Projective α_g Fix<span class="rung-year"><span class="who">@bernardo-lima12</span> · Nov 1, 2026 · PRs #2047–#2049</span></span><span class="track"><span class="bar" style="width:41.13084112149533%"></span></span><span class="rung-score">121.999 bits</span></button></div><div><button type="button" class="rung" aria-pressed="false"><span class="rung-name">+ ±1 Unit LA &amp; Chunked Rec<span class="rung-year"><span class="who">@pepedesigner, @kaankolcu</span> · Nov 1–2, 2026 · PRs #2054–#2361</span></span><span class="track"><span class="bar" style="width:49.25233644859813%"></span></span><span class="rung-score">121.13 bits</span></button></div><div><button type="button" class="rung" aria-pressed="false"><span class="rung-name">+ Weighted UDUP &amp; Lazy ECM<span class="rung-year"><span class="who">@kaankolcu, @gbotrel, @pepedesigner, @mpjunior92</span> · Nov 3–5, 2026 · PRs #2383–#2927</span></span><span class="track"><span class="bar" style="width:56.35514018691589%"></span></span><span class="rung-score">120.37 bits</span></button></div><div><button type="button" class="rung" aria-pressed="false"><span class="rung-name">+ Listed-Unit Runs (rec7)<span class="rung-year"><span class="who">@kaankolcu, @mpjunior92, @web5200, @ethvs</span> · Nov 5–6, 2026 · PRs #2935–#3165</span></span><span class="track"><span class="bar" style="width:64.67289719626169%"></span></span><span class="rung-score">119.48 bits</span></button></div><div><div class="ladder-divider">Post-06/11 Updates · SRT Batching &amp; Non-Monogenic Twisted τ-Tower</div><button type="button" class="rung" aria-pressed="false"><span class="rung-name">+ f-Only Sieve &amp; g-Batch SRT<span class="rung-year"><span class="who">@gbotrel, @Phoenix0075, @kaankolcu</span> · Nov 6–7, 2026 · PRs #3200–#3509</span></span><span class="track"><span class="bar" style="width:83.45794392523365%"></span></span><span class="rung-score">117.47 bits</span></button></div><div><button type="button" class="rung" aria-pressed="true"><span class="rung-name">+ Twisted τ-Tower (h₂) &amp; Wt-400<span class="rung-year"><span class="who">@gbotrel, @0xplemonade, @kaankolcu</span> · Nov 8, 2026 · PRs #3573–#3609</span></span><span class="track"><span class="bar" style="width:100%"></span></span><span class="rung-score">115.70 bits</span></button></div></div><div class="readout"><p class="byline"><span class="who">@gbotrel, @0xplemonade, @kaankolcu</span> — Nov 8, 2026 · PRs #3573–#3609</p><div class="eq"><div class="term is-fixed"><span class="term-lab">sieve &amp; geometry</span><span class="term-val">Order-4 τ-tower (h₂)</span><span class="term-sub">U' = U/2 · α = 1.04b · p₂-coset</span></div><div class="term is-moves"><span class="term-lab">matrix &amp; descent</span><span class="term-val">wt = 400, (144,17) BW</span><span class="term-sub">2.69% of U' · 10 χ-cols · 3 owners</span></div><div class="term"><span class="term-lab">verified complexity</span><span class="term-val">2<sup>115.70</sup></span><span class="term-sub">CurveSmash C=20,000 units</span></div></div><p class="detail-what">Switches to non-monogenic <code>h₂(y) = y⁶ + 2y⁴ − 2y³ − 2y² − 1</code> (index <code>4</code>, <code>w = y + 1</code>) with order-4 twisted automorphism <code>τ: (y, x) ↦ (σ(y), cx)</code> (<code>Frobenius³</code>), halving the factor base into 4-ideal <code>τ</code>-orbits, slashing Murphy <code>α</code> from <code>6.00 → 1.04</code> bits, and merging to <code>wt = 400</code> with <code>(144, 17)</code> Block Wiedemann.</p><span class="delta">−1.78 bits · breaks 2¹¹⁶ (240× faster than 123.61 baseline)</span></div></div><div class="col"><details class="code-fold"><summary><span>Deep Dive · Mathematical vs. Implementation Breakthroughs (123.61 → 115.70 Bits)</span><span>click to expand</span></summary><div class="fold-body"><p><span class="tag-badge tag-math">Math</span><b>1. Canonical Free-Unit Deduplication &amp; The 66-Node Descent Tree (<code>@gbotrel</code>):</b> Because <span>\(88\%\)</span> of smooth points inside the 12D ellipsoid are unit-associate duplicates <span>\((\varepsilon a, \varepsilon b)\)</span> that produce identical matrix rows, <code>@gbotrel</code> used 6D lattice reduction (LLL) to pick a single canonical <span>\(a\)</span>-representative per unit orbit—skipping <span>\(88\%\)</span> of wasted sieving—and constructed the complete 66-node 12D ball-sieved <span>\(\mathfrak{q}\)</span>-descent tree to find individual logarithms.</p><p><span class="tag-badge tag-math">Math</span><b>2. Symmetry-Filtered Schirokauer Maps &amp; Descent Rerandomization (<code>@gbotrel</code>, <code>@cryptogakusei</code>):</b> The even polynomial structure (<span>\(X^2\)</span>) gives a sign symmetry <span>\(\sigma: X \mapsto -X\)</span> that automatically cancels half the unit directions. Keeping only the <span>\(\le 27\)</span> active unit columns simplified linear algebra into a single homogeneous solve, while random auxiliary ideals ensured the descent tree never gets stuck in a loop if it hits a missing factor-base prime twice.</p><p><span class="tag-badge tag-math">Math</span><b>3. Certified Lattice Point Counts &amp; The <span>\(p=2\)</span> Murphy-<span>\(\alpha_g\)</span> Fix (<code>@kaankolcu</code>, <code>@mpjunior92</code>, <code>@pepedesigner</code>, <code>@bernardo-lima12</code>):</b> Contributors replaced rough volume approximations with certified discrete lattice-point bounds, separated offline Monte Carlo sampling noise from runtime attack probability, and fixed a missing root-counting factor above <span>\(p=2\)</span> in Murphy’s <span>\(\alpha_g\)</span> to push the score below <span>\(2^{122}\)</span>.</p><p><span class="tag-badge tag-impl">Implementation</span><b>4. Fast <span>\(\pm 1\)</span> Linear Algebra (<code>bw_unit</code>) &amp; Chunked Bucket Recovery (<code>@pepedesigner</code>, <code>@kaankolcu</code>):</b> Experimentally, over <span>\(88\text{–}94\%\)</span> of the nonzero entries in the filtered matrix are simply <span>\(+1\)</span> or <span>\(-1\)</span>. Replacing full <span>\(96\)</span>-instruction modular multiplications with <span>\(33\)</span>-instruction additions and subtractions cut linear algebra cost nearly in third, while partitioning the sieve into <span>\(2^{30}\)</span>-cell chunks avoided reading prime buckets in chunks with no survivors.</p><p><span class="tag-badge tag-math">Math</span><span class="tag-badge tag-impl">Implementation</span><b>5. Leaner Relation Excess (<span>\(R_{\text{found}} &gt; 1.1\,U\)</span>) &amp; Lazy Descent ECM (<code>@kaankolcu</code>, <code>@gbotrel</code>, <code>@pepedesigner</code>, <code>@mpjunior92</code>):</b> Proving a tighter unit-deduplication rate inside the descent balls allowed contributors to reduce the main-phase oversieving requirement in our relation equation from <span>\(R_{\text{found}} &gt; 1.3\,U\)</span> down to <span>\(R_{\text{found}} &gt; 1.1\,U\)</span>, while stopping ECM cofactorization inside each descent step as soon as the first valid child relation is found.</p><p><span class="tag-badge tag-math">Math</span><span class="tag-badge tag-impl">Implementation</span><b>6. Contiguous Slice Runs (<code>rec7</code>) &amp; Deep Matrix Merging (<code>@kaankolcu</code>, <code>@mpjunior92</code>, <code>@web5200</code>, <code>@ethvs</code>):</b> Instead of running an expensive 6D LLL check on every single <span>\(a\)</span>-slice, <code>rec7</code> pre-screens slices with a fast list of small units and sieves <span>\(1{,}024\)</span> contiguous slices at a time. Simultaneously, because <span>\(\pm 1\)</span> matrix entries are so cheap, contributors merged rows up to weight <span>\(300\)</span>, shrinking the final matrix to just <span>\(3.58\%\)</span> of the factor base <span>\(U\)</span> and breaking the <span>\(2^{120}\)</span> barrier (<strong><span>\(119.48\)</span> bits</strong> on Nov 6).</p><p><span class="tag-badge tag-math">Math</span><span class="tag-badge tag-impl">Implementation</span><b>7. Post-06/11 Update I — <span>\(f\)</span>-Only Sieving, Scaled Remainder Trees (<code>SRT</code>), Cofactor Windows &amp; <span>\((72,5)\)</span> Block-Diagonal BW (<code>@gbotrel</code>, <code>@Phoenix0075</code>, <code>@kaankolcu</code> · <span>\(119.48 \to 117.47\)</span> bits):</b> Eliminated <span>\(g\)</span>-side sieving altogether: only the <span>\(f\)</span>-side is sieved, and for the <span>\(\sim 2^{-22.5}\)</span> fraction of cells surviving the <span>\(f\)</span>-threshold, their exact <span>\(576\)</span>-bit <span>\(g\)</span>-norm <span>\(z\)</span> is tested for <span>\(2^{69}\)</span>-smoothness in waves of <span>\(K = 2^{61}\)</span> via a Bernstein <strong>Scaled Remainder Tree</strong> <span>\((P_g \bmod z)^{2^{10}} \equiv 0 \pmod z\)</span> (paired with a <span>\(K = 2^{39}\)</span> mid-band SRT strip on <span>\((2^{20}, 2^{48}]\)</span>). On the <span>\(f\)</span>-side, ECM runs only when the stripped composite cofactor <span>\(C\)</span> falls in the three valid smoothness windows <span>\(64k &lt; \log_2 C \le 69k\)</span> (<span>\(k \in \{2,3,4\}\)</span>, skipping <span>\(\sim 84\%\)</span> of ECM calls), while totally complex signature analysis reduced the <span>\(\sigma\)</span>-odd Schirokauer block to <span>\(21\)</span> columns and introduced <span>\((m,n) = (72,5)\)</span> Block Wiedemann with a shuffled block-diagonal left projection <span>\(X\)</span> and <span>\(5\)</span>-chain interleaved Horner evaluation.</p><p><span class="tag-badge tag-math">Math</span><span class="tag-badge tag-impl">Implementation</span><b>8. Post-06/11 Update II — Non-Monogenic Twisted <span>\(\tau\)</span>-Tower (<span>\(h_2\)</span>), <span>\(\mathfrak{p}_2\)</span>-Coset Sieving &amp; Weight-400 <span>\(\tau\)</span>-Filtering (<code>@gbotrel</code>, <code>@0xplemonade</code>, <code>@kaankolcu</code> · <span>\(117.47 \to 115.70\)</span> bits):</b> Replaced <span>\(h(y)\)</span> with <span>\(h_2(y) = y^6 + 2y^4 - 2y^3 - 2y^2 - 1\)</span> (where <span>\(\mathcal{O}_{K_h}\)</span> is non-monogenic of index <span>\([\mathcal{O}_{K_h} : \mathbb{Z}[y]] = 4\)</span> and uses an explicit integral basis with shifted top polynomials in <span>\(w = y + 1\)</span>, <span>\(N(w) = 2\)</span>). This field admits an order-<span>\(2\)</span> automorphism <span>\(\sigma\)</span> and unit <span>\(c \in \mathcal{O}_{K_h}^\times\)</span> (<span>\(c\sigma(c) = -1\)</span>) that lift to an <strong>order-<span>\(4\)</span> twisted automorphism <span>\(\tau : (y, x) \mapsto (\sigma(y), cx)\)</span></strong> acting as <span>\(\text{Frobenius}^3\)</span> on <span>\(\mathbb{F}_{p^{12}}\)</span> (<span>\(\log \tau(\mathfrak{P}) \equiv \chi \log \mathfrak{P} \pmod r\)</span> with <span>\(\chi^2 \equiv -1\)</span>). Quotienting by <span>\(\tau\)</span>-orbits of size <span>\(4\)</span> <strong>halves the factor base</strong> to <span>\(U' = U/2 = 2^{62.451}\)</span>, slashes charged Murphy <span>\((\alpha_f, \alpha_g)\)</span> from <span>\((5.15, 0.85)\)</span> to <strong><span>\((0.29, 0.75)\)</span></strong> (with exact per-row <span>\(2\)</span>-adic valuation <span>\(v_2(N_f) \in \{0,6\}\)</span>), skips <span>\(25\%\)</span> of cells via <span>\(\mathfrak{p}_2\)</span>-coset sieving (<span>\(b \notin \mathfrak{p}_2\)</span> whenever <span>\(a \in \mathfrak{p}_2\)</span>), halves the Schirokauer block to <span>\(10\)</span> <span>\(\chi\)</span>-eigenpart columns, and merges the <span>\(\tau\)</span>-quotient matrix to weight <span>\(400\)</span> (<span>\(N/U' \le 2.69\%\)</span>, <span>\(3\)</span> owners) with <span>\((m,n) = (144,17)\)</span> Block Wiedemann to reach <strong><span>\(2^{115.6983}\)</span></strong> (<strong><span>\(115.70\)</span> bits</strong>).</p></div></details></div></section><section id="remarks"><div class="col"><h2><span class="idx">05 · General Remarks &amp; What Comes Next</span>Scope, cross-track scoring &amp; mathematical outlook</h2><p>All concrete improvements described here apply specifically to <strong>BLS12-381</strong> within the <a href="https://yukon.org/curvesmash" target="_blank" rel="noreferrer" class="ext-link">CurveSmash benchmark</a>. Because the exact same STNFS codebase powers three tracks—<code>bls12-381-fixed-g1-invert-g2</code> (FAPI-1), <code>bls12-381-fixed-g2-invert-g1</code> (FAPI-2), and <code>bls12-381-g1-ecdlp-plain</code> (plain <span>\(G_1\)</span> DLP)—every algorithmic leap simultaneously advances all three leaderboards (with the <span>\(G_1\)</span> track reporting a numerical score <span>\(\log_2(10) \approx 3.32\)</span> bits higher solely because its reference divisor is <span>\(C = 2{,}000\)</span> rather than <span>\(C = 20{,}000\)</span> instructions).</p><div class="aside"><b>Under the Hood of the Mathematics.</b> A potential “Part 2” follow-up may look closer at the mathematical foundations behind these estimates, such as the five modular STNFS heuristics (<b>H1–H5</b>) used to audit relation collection, filtering, and descent inside CurveSmash.</div></div></section><footer><div class="col"><p class="rule-lab">References</p><ol class="bib-list"><li class="bib-item" id="ref-1"><span class="bib-num">[1]</span><div class="bib-body"><b>Taechan Kim and Razvan Barbulescu</b>, <em>Extended Tower Number Field Sieve: A New Complexity for the Medium Prime Case</em>, Advances in Cryptology — CRYPTO 2016, LNCS 9814, pp. 543–571 (2016).<a href="https://doi.org/10.1007/978-3-662-53018-4_20" target="_blank" rel="noreferrer">doi:10.1007/978-3-662-53018-4_20 ↗</a><a href="#cite-1a" title="Jump back to text">↩</a></div></li><li class="bib-item" id="ref-2"><span class="bib-num">[2]</span><div class="bib-body"><b>Paulo S. L. M. Barreto, Ben Lynn, and Michael Scott</b>, <em>Constructing Elliptic Curves with Prescribed Embedding Degrees</em>, Security in Communication Networks — SCN 2002, LNCS 2576, pp. 257–267 (2002).<a href="https://doi.org/10.1007/3-540-36413-7_19" target="_blank" rel="noreferrer">doi:10.1007/3-540-36413-7_19 ↗</a><a href="#cite-2a" title="Jump back to text">↩</a></div></li><li class="bib-item" id="ref-3"><span class="bib-num">[3]</span><div class="bib-body"><b>Razvan Barbulescu and Sylvain Duquesne</b>, <em>Updating Key Size Estimations for Pairings</em>, Journal of Cryptology, Vol. 32, pp. 1298–1336 (2019); see also Nadia El Mrabet, Loubna Ghammam, and Sylvain Duquesne, ePrint 2019/485.<a href="https://doi.org/10.1007/s00145-018-9280-5" target="_blank" rel="noreferrer">doi:10.1007/s00145-018-9280-5 ↗</a><a href="#cite-3a" title="Jump back to text">↩</a></div></li><li class="bib-item" id="ref-4"><span class="bib-num">[4]</span><div class="bib-body"><b>Thomas Pornin (NCC Group)</b>, <em>Zcash Overwinter Consensus and Sapling Cryptography Review</em>, Public Security Audit Report (2019).<a href="#cite-4a" title="Jump back to text">↩</a></div></li><li class="bib-item" id="ref-5"><span class="bib-num">[5]</span><div class="bib-body"><b>Michael Scott</b>, <em>Pairing Implementation Revisited</em>, Cryptology ePrint Archive, Report 2019/077 (2019).<a href="https://eprint.iacr.org/2019/077" target="_blank" rel="noreferrer">ePrint 2019/077 ↗</a><a href="#cite-5a" title="Jump back to text">↩</a></div></li><li class="bib-item" id="ref-6"><span class="bib-num">[6]</span><div class="bib-body"><b>Aurore Guillevic and Shashank Singh</b>, <em>On the Alpha Value of Polynomials in the Tower Number Field Sieve Algorithm</em>, Mathematical Cryptology, Vol. 1, No. 1, pp. 39–82 (2021).<a href="https://eprint.iacr.org/2019/885" target="_blank" rel="noreferrer">ePrint 2019/885 ↗</a><a href="#cite-6a" title="Jump back to text">↩</a></div></li><li class="bib-item" id="ref-7"><span class="bib-num">[7]</span><div class="bib-body"><b>CurveSmash Contributors (<code>@gbotrel</code>, <code>@cryptogakusei</code>, <code>@kaankolcu</code>, <code>@mpjunior92</code>, <code>@pepedesigner</code>, <code>@bernardo-lima12</code>, <code>@web5200</code>, <code>@ethvs</code>, <code>@Phoenix0075</code>, <code>@0xplemonade</code>)</b>, <em>BLS12-381 STNFS Submissions &amp; Audited Pull Requests (#737–#3609)</em>, Yukon CurveSmash Benchmark (2026).<a href="https://yukon.org/curvesmash" target="_blank" rel="noreferrer">yukon.org/curvesmash ↗</a></div></li></ol><div style="margin-top:26px;padding:14px 18px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);font-size:14px;color:var(--ink-mid);line-height:1.6"><strong style="color:var(--ink);font-family:&#x27;JetBrains Mono&#x27;, monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px">Authors &amp; Provenance</strong>By <strong style="color:var(--ink)">Julio de Mello Bezerra and Youssef El Housni</strong>. Attributions across the 850+ CurveSmash pull requests were synthesized with AI assistance and may contain inadvertent omissions; CurveSmash is a live benchmark where new submissions continue to be evaluated.</div></div></footer></div></div>
+    <script>
+const TOWER_STEPS = [
+  {
+    tag: 'step 1 · lifting & smoothness',
+    titleHtml:
+      'Lift \\(\\mathbb{F}_{p^{12}}\\) to characteristic zero where norms can factor',
+    formula: String.raw`$$(z)\mathcal{O}_K = \prod \mathfrak{p}_i^{e_i} \;\;(\text{norm } N(\mathfrak{p}_i) \le B) \quad\Longleftrightarrow\quad |N_{K/\mathbb{Q}}(z)| \in \mathbb{Z} \text{ is } B\text{-smooth}$$`,
+    mechHtml:
+      'Finite-field elements wrap around modulo \\(p\\) and cannot be factored into small primes. Lifting to a number ring \\(\\mathcal{O}_K\\) lets us measure size via the integer norm \\(N(z) \\in \\mathbb{Z}\\): whenever \\(N(z)\\) factors into primes \\(< B\\) (called <b>\\(B\\)-smooth</b>), taking discrete logs modulo \\(r\\) turns multiplication into a linear equation among virtual logarithms.',
+    costGen:
+      'Problem with 1 ring: only gives 1 side of an equation (an unfactored target remains)',
+    costSpec:
+      'Fix: intersect two rings \\(\\mathcal{O}_{K_f}\\) and \\(\\mathcal{O}_{K_g}\\) sharing a root modulo \\(p\\)',
+    normBits: 1380,
+  },
+  {
+    tag: 'step 2 · classical nfs',
+    titleHtml:
+      'Build a two-sided commutative diagram over \\(\\mathbb{Z}[X]\\)',
+    formula: String.raw`$$\psi_f(a - bX) \equiv \psi_g(a - bX) \pmod p \quad\Longrightarrow\quad \sum e_{\mathfrak{p}} \log \mathfrak{p} \equiv \sum e_{\mathfrak{q}} \log \mathfrak{q} \pmod r$$`,
+    mechHtml:
+      'Classical NFS picks two polynomials \\(f(X), g(X) \\in \\mathbb{Z}[X]\\) of degree \\(\\ge 12\\) sharing an irreducible factor modulo \\(p\\), and sieves integer pairs \\((a, b) \\in [-A, A]^2\\). When both norms \\(N_f(a,b)\\) and \\(N_g(a,b)\\) are simultaneously \\(B\\)-smooth, their images in \\(\\mathbb{F}_{p^{12}}\\) equate two smooth factorizations.',
+    costGen:
+      '2D Sieve Bottleneck: reaching \\(V \\approx 2^{120}\\) pairs in \\(\\mathbb{Z}^2\\) forces \\(|a|, |b| \\approx 2^{60}\\)',
+    costSpec:
+      'Raising \\(A \\approx 2^{60}\\) to degree \\(\\ge 12\\) explodes \\(\\log_2(N_f \\cdot N_g)\\) to \\(\\sim 1{,}380\\) bits',
+    normBits: 1380,
+  },
+  {
+    tag: 'step 3 · tower nfs (tnfs)',
+    titleHtml:
+      'Split the extension \\(12 = 6 \\cdot 2\\) and sieve in 12 dimensions',
+    formula: String.raw`$$a - bX \in \mathcal{O}_{K_h}[X], \quad (a_0,\dots,a_5, b_0,\dots,b_5) \in \mathbb{Z}^{12}, \quad [K_h : \mathbb{Q}] = \eta = 6$$`,
+    mechHtml:
+      'Instead of jumping straight from \\(\\mathbb{Q}\\) to degree 12, TNFS first adjoins a root \\(y\\) of a degree-6 polynomial \\(h(Y)\\) with tiny coefficients (\\(\\|h\\|_\\infty = 1\\)), then takes a quadratic extension \\(\\kappa = 2\\) on top. Sieving 12-tuples in \\(\\mathbb{Z}^{12}\\) spreads the volume \\(V\\) across 12 axes so each integer coordinate is tiny (\\(A \\approx 600\\), under 10 bits!).',
+    costGen:
+      'General TNFS Norm Bound: \\(\\deg_X(f)\\cdot\\eta \\log_2\\|g\\| + \\deg_X(g)\\cdot\\eta \\log_2\\|f\\| \\ge 12 \\log_2 p\\)',
+    costSpec:
+      'Even with \\(A \\approx 600\\), generic \\(p\\) forces \\(\\|f\\|, \\|g\\| \\approx p^{1/3}\\), leaving \\(\\log_2(N_f \\cdot N_g) \\approx 920\\) bits',
+    normBits: 920,
+  },
+  {
+    tag: 'step 4 · special tnfs (stnfs)',
+    titleHtml:
+      'Exploit the BLS12-381 seed \\(u\\) to trade degree for 1-bit coefficients',
+    formula: String.raw`$$g_y(X) = X^2 - uy \;\;(\deg 2,\; \|g\| = |u|), \qquad f_y(X) = y^6 \Gamma(X^2/y) \bmod h(y) \;\;(\deg 12,\; \|f\| = 2)$$`,
+    mechHtml:
+      'Because \\(3p = \\Gamma(u) = u^6 - 2u^5 + 2u^3 + u + 1\\) has tiny coefficients for the 64-bit seed \\(u\\), substituting \\(u = X^2/y\\) produces an \\(f\\)-side polynomial of degree 72 over \\(\\mathbb{Q}\\) whose coefficients are at most \\(2\\)! Paying for degree 12 in \\(X\\) while erasing \\(\\sim 756\\) bits of coefficient weight slashes the combined norm.',
+    costGen:
+      'Asymptotic \\(L_{p^{12}}[1/3, c]\\) constant drops from \\(c = (48/9)^{1/3} \\approx 1.747\\) to \\((32/9)^{1/3} \\approx 1.526\\)',
+    costSpec:
+      'Combined with @gbotrel’s 12D fibred ellipsoid + Galois \\(X \\mapsto -X\\), \\(\\log_2(N_f \\cdot N_g)\\) drops to \\(\\sim 625\\) bits',
+    normBits: 625,
+  },
+  {
+    tag: 'step 5 · linear algebra & descent',
+    titleHtml:
+      'Collect \\(R_{\\text{found}} = V \\cdot E > U\\) relations, solve LA &amp; descend to targets',
+    formula: String.raw`$$U = \text{Li}(B) \approx 2^{62.8}\text{ ideals} \;\xrightarrow{\text{flt}\,\approx\,28\text{–}74}\; N \times N\text{ sparse matrix } (\text{wt} = 300\text{–}400)$$`,
+    mechHtml:
+      'Once \\(R_{\\text{found}} = V \\cdot E > 1.1\\,U\\) smooth relations are collected at \\(B = 2^{69}\\), singleton/clique deletion and Markowitz merges shrink the matrix by \\(28\\times\\) (and \\(74\\times\\) with the post-06/11 order-4 \\(\\tau\\)-tower). Solving the \\(N \\times N\\) system modulo \\(r\\) via Block Wiedemann yields the virtual logs, after which a 12D ball-sieved \\(\\mathfrak{q}\\)-descent tree finds the individual target logs in \\(G_T\\).',
+    costGen:
+      'Balanced Sieve + LA + 2-Target Descent at \\(B = 2^{69},\\; X_2 = 2^{63}\text{–}2^{64}\\)',
+    costSpec:
+      'Verified total CurveSmash cost: \\(2^{119.48}\\) (06/11) \\(\\to 2^{115.70}\\) (08/11) \\(\\mathbb{F}_{p^{12}}\\)-equivalent operations',
+    normBits: 480,
+  },
+];
+
+const TOWER_SPLITS = [
+  {
+    eta: 12,
+    kappa: 1,
+    norm: 742,
+    label: 'η = 12, κ = 1 (deg-12 base)',
+    note: 'Optimal only when p ≲ 320 bits; on 381-bit p the Q^(1/6) coefficient term inflates N_g.',
+  },
+  {
+    eta: 6,
+    kappa: 2,
+    norm: 625,
+    label: 'η = 6, κ = 2 (SexTNFS sweet spot)',
+    note: 'Minimizes N_f·N_g at 128-bit scale and unlocks free Galois involution σ: X ↦ −X (halves factor base U).',
+  },
+  {
+    eta: 4,
+    kappa: 3,
+    norm: 678,
+    label: 'η = 4, κ = 3 (cubic top)',
+    note: 'Higher top degree κ = 3 increases the (d+1)κ log₂ E degree penalty by ~53 bits.',
+  },
+  {
+    eta: 3,
+    kappa: 4,
+    norm: 735,
+    label: 'η = 3, κ = 4 (quartic top)',
+    note: 'Degree term 7κ log₂ E dominates; sieve geometry loses the quadratic involution advantage.',
+  },
+  {
+    eta: 2,
+    kappa: 6,
+    norm: 860,
+    label: 'η = 2, κ = 6 (sextic top)',
+    note: 'Approaches classical high-degree NFS; resultant norms grow too rapidly with sieve coordinate A.',
+  },
+  {
+    eta: 1,
+    kappa: 12,
+    norm: 1120,
+    label: 'η = 1, κ = 12 (no tower / classical)',
+    note: 'No base field tower (K_h = Q): sieving in Z² forces A ≈ 2⁶⁰ and explodes the resultant norm.',
+  },
+];
+
+const MILESTONE_STAGES = [
+  {
+    name: 'Corrected Box Baseline',
+    by: 'G-S 2021 + missing math in CS units',
+    year: 'pre-CurveSmash reference',
+    score: 126.4,
+    steps: '[−A, A]¹² box sieve',
+    stepsSub: '88% free-unit duplicates paid',
+    cost: '96 inst/entry LA',
+    costSub: 'flt = 20, wt = 200 + 2-target descent',
+    whatHtml:
+      'Guillevic–Singh’s 2021 box-sieve model (<code>126.0</code> abstract bits) translated into CurveSmash <code>C = 20,000</code> units (<code>−7.1b</code>) after replacing <code>h(Y)</code> so that <code>g_y</code> stays irreducible, and paying for the omitted 88% unit duplicates, realistic filtering, and 66-node <code>q</code>-descent (<code>+7.5b</code>).',
+    delta: null,
+    projected: true,
+  },
+  {
+    name: 'Guillevic–Singh (raw)',
+    by: 'Guillevic & Singh',
+    year: '2021 · Math. Cryptology (abstract ops)',
+    score: 126.0,
+    steps: '1/ζ_(K_h)(2) coprime',
+    stepsSub: 'exact TNFS Murphy-α & E',
+    cost: '800 · (U/20)² ops',
+    costSub: 'c_sieve = ln ln B ≈ 4.19',
+    whatHtml:
+      'Refined B-D by introducing exact TNFS Murphy-<code>α</code> (showing <code>α_f + α_g ≈ +4.53</code> bits is unfavorable on BLS12-381) and <code>1/ζ_(K_h)(2)</code> coprimality, but used <code>h(Y) = Y⁶ − Y² + 1</code>, which makes <code>u·y</code> a square in <code>F_p⁶</code> so <code>g_y</code> splits, and omitted unit duplicates &amp; descent.',
+    delta: 'Literature benchmark (abstract elementary ops)',
+    projected: true,
+  },
+  {
+    name: 'Milestone 1 · Valid Tower',
+    by: '@gbotrel',
+    year: 'Oct 27–28, 2026 · PRs #737–#1659',
+    score: 123.61,
+    steps: '12D fibred ellipsoid',
+    stepsSub: '6D LLL skips 88% unit dupes',
+    cost: '96 inst/entry LA',
+    costSub: 'X₂ = 2⁶³ < B = 2⁶⁹ ECM split',
+    whatHtml:
+      'Replaces G-S’s invalid <code>h(Y)</code> with <code>Y⁶ + Y³ + Y² − Y − 1</code>, reshapes the sieve into a 12D fibred ellipsoid (<code>−65b</code> norm product), deduplicates free units via 6D LLL, and implements the full 66-node 12D ball <code>q</code>-descent.',
+    delta: 'Baseline valid CurveSmash submission (123.61 CS bits)',
+    projected: false,
+  },
+  {
+    name: '+ σ-Odd Units & Rerandom',
+    by: '@gbotrel, @cryptogakusei',
+    year: 'Oct 28, 2026 · PRs #1680–#1792',
+    score: 122.3,
+    steps: '≤ 27 σ-odd unit cols',
+    stepsSub: 'homogeneous sparse LA solve',
+    cost: '±1 signed filtering',
+    costSub: "Qq' auxiliary descent lattices",
+    whatHtml:
+      "Restricts Schirokauer unit columns to the <code>≤ 27</code> directions odd under <code>σ: X ↦ −X</code> (eliminating spurious kernel vectors and dense RHS solves) and rerandomizes repeated descent queries via composite <code>Qq'</code> lattices.",
+    delta: '−1.31 bits · 2.48× speedup over baseline',
+    projected: false,
+  },
+  {
+    name: '+ Certified Shells & N_max',
+    by: '@kaankolcu, @mpjunior92, @pepedesigner',
+    year: 'Oct 29–31, 2026 · PRs #1830–#2028',
+    score: 122.03,
+    steps: 'radial shell bounds',
+    stepsSub: 'epistemic vs. aleatoric split',
+    cost: 'hard N_max meter',
+    costSub: 'certified descent birthday cap',
+    whatHtml:
+      'Certifies discrete lattice point counts inside the 12D ellipsoid via radial shells, separates offline Monte Carlo standard error from runtime variance, and bounds descent tree collisions with a hard node-visit meter <code>N_max</code>.',
+    delta: '−0.27 bits · rigorous statistical certification',
+    projected: false,
+  },
+  {
+    name: '+ Projective α_g Fix',
+    by: '@bernardo-lima12',
+    year: 'Nov 1, 2026 · PRs #2047–#2049',
+    score: 121.999,
+    steps: 'breaks 2¹²² barrier',
+    stepsSub: 'exact p = 2 projective root factor',
+    cost: 'verified α_g = +0.59',
+    costSub: 'tighter smoothness yield',
+    whatHtml:
+      'Discovers and repairs a missing projective base-primitivity factor above the prime <code>p = 2</code> in the in-package Murphy-<code>α_g</code> verifier, delivering the first audited submission below <code>2¹²²</code>.',
+    delta: '−0.03 bits · first sub-2¹²² submission',
+    projected: false,
+  },
+  {
+    name: '+ ±1 Unit LA & Chunked Rec',
+    by: '@pepedesigner, @kaankolcu',
+    year: 'Nov 1–2, 2026 · PRs #2054–#2361',
+    score: 121.13,
+    steps: '2³⁰-cell survivor gate',
+    stepsSub: '1D line sieve to 2⁴⁸ + exact conv',
+    cost: '33 inst/entry (bw_unit)',
+    costSub: '≥ 88% of matrix entries are ±1',
+    whatHtml:
+      'Proves that <code>≥ 88–94%</code> of filtered matrix entries are <code>±1</code>, replacing 96-instruction modular MACs with 33-instruction limb add/sub (<code>bw_unit</code>), and gates bucket recovery on <code>2³⁰</code>-cell chunks containing survivors.',
+    delta: '−0.87 bits · nearly 3× faster sparse linear algebra',
+    projected: false,
+  },
+  {
+    name: '+ Weighted UDUP & Lazy ECM',
+    by: '@kaankolcu, @gbotrel, @pepedesigner, @mpjunior92',
+    year: 'Nov 3–5, 2026 · PRs #2383–#2927',
+    score: 120.37,
+    steps: 'R_found > 1.1 U excess',
+    stepsSub: 'UDUP → 0.65 + event G bound',
+    cost: 'lazy_mc descent ECM',
+    costSub: 'halts ball ECM on 1st valid child',
+    whatHtml:
+      'Uses relation-weighted integer-ball sampling to raise descent <code>UDUP</code> to <code>0.65</code>, cuts main-phase oversieving from <code>R_found &gt; 1.3 U</code> to <code>R_found &gt; 1.1 U</code> via a shared missing-table concentration event <code>G</code>, and stops descent ECM after the first valid child.',
+    delta: '−0.76 bits · leaner relation excess & faster descent',
+    projected: false,
+  },
+  {
+    name: '+ Listed-Unit Runs (rec7)',
+    by: '@kaankolcu, @mpjunior92, @web5200, @ethvs',
+    year: 'Nov 5–6, 2026 · PRs #2935–#3165',
+    score: 119.48,
+    steps: '1,024-slice rec7 runs',
+    stepsSub: 'breaks 2¹²⁰ barrier · fast unit list',
+    cost: 'wt = 300, flt ≈ 28',
+    costSub: '3.58% matrix size · 7-owner LA',
+    whatHtml:
+      'Replaces per-slice 6D LLL checks with contiguous <code>1,024</code>-slice runs screened by a finite unit list (with work-weighted contamination bounds) and pushes Markowitz merges to <code>wt = 300</code> (shrinking <code>N</code> to <code>3.58%</code> of <code>U</code>).',
+    delta: '−0.89 bits · breaks 2¹²⁰ (17.4× faster than baseline)',
+    projected: false,
+  },
+  {
+    name: '+ f-Only Sieve & g-Batch SRT',
+    by: '@gbotrel, @Phoenix0075, @kaankolcu',
+    year: 'Nov 6–7, 2026 · PRs #3200–#3509',
+    score: 117.47,
+    steps: 'f-only + K=2⁶¹ g-SRT',
+    stepsSub: 'cofactor windows H-EA (15.6% ECM)',
+    cost: '(72, 5) block-diag BW',
+    costSub: '21 σ-odd cols · 5-chain Horner',
+    whatHtml:
+      'Eliminates <code>g</code>-side sieving via a <code>K = 2⁶¹</code> Scaled Remainder Tree <code>(P_g mod z)^(2¹⁰) ≡ 0 (mod z)</code> on <code>f</code>-survivors, restricts <code>f</code>-ECM to 3 composite bit-length windows (<code>64k &lt; log₂ C ≤ 69k</code>), cuts Schirokauer columns to <code>21</code>, and uses <code>(72, 5)</code> Block Wiedemann with shuffled block-diagonal <code>X</code>.',
+    delta: '−2.01 bits · breaks 2¹¹⁸ ("Plain P11" architecture)',
+    projected: false,
+  },
+  {
+    name: '+ Twisted τ-Tower (h₂) & Wt-400',
+    by: '@gbotrel, @0xplemonade, @kaankolcu',
+    year: 'Nov 8, 2026 · PRs #3573–#3609',
+    score: 115.70,
+    steps: 'Order-4 τ-tower (h₂)',
+    stepsSub: "U' = U/2 · α = 1.04b · p₂-coset",
+    cost: 'wt = 400, (144,17) BW',
+    costSub: "2.69% of U' · 10 χ-cols · 3 owners",
+    whatHtml:
+      'Switches to non-monogenic <code>h₂(y) = y⁶ + 2y⁴ − 2y³ − 2y² − 1</code> (index <code>4</code>, <code>w = y + 1</code>) with order-4 twisted automorphism <code>τ: (y, x) ↦ (σ(y), cx)</code> (<code>Frobenius³</code>), halving the factor base into 4-ideal <code>τ</code>-orbits, slashing Murphy <code>α</code> from <code>6.00 → 1.04</code> bits, and merging to <code>wt = 400</code> with <code>(144, 17)</code> Block Wiedemann.',
+    delta: '−1.78 bits · breaks 2¹¹⁶ (240× faster than 123.61 baseline)',
+    projected: false,
+  },
+];
+
+(function() {
+  let theme = "light";
+  let splitIdx = 1;
+  let stepIdx = 0;
+  let ruler = "cs_fapi";
+  let chkUnits = true;
+  let chkFilt = true;
+  let chkDesc = true;
+  let selectedRung = 10;
+  let zoomLadder = false;
+
+  function renderMath(el) {
+    if (window.renderMathInElement) {
+      window.renderMathInElement(el || document.body, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\(", right: "\\)", display: false }
+        ],
+        throwOnError: false
+      });
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", function() {
+    renderMath(document.body);
+    setTimeout(function() { renderMath(document.body); }, 350);
+
+    // Theme toggle button
+    const themeBtn = document.getElementById("theme-toggle-btn") || document.querySelector(".top-nav-actions button.btn-action");
+    if (themeBtn) {
+      themeBtn.addEventListener("click", function() {
+        theme = theme === "light" ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", theme);
+      });
+    }
+
+    const panels = document.querySelectorAll(".panel");
+    const panelTower = panels[0];
+    const panelSteps = panels[1];
+    const panelRuler = panels[2];
+    const panelLadder = panels[3];
+
+    // 1. Tower Decomposition Explorer
+    function updateTower() {
+      if (!panelTower) return;
+      const activeSplit = TOWER_SPLITS[splitIdx];
+      const splitPenalty = (activeSplit.norm - 625) * 0.042;
+      const btns = panelTower.querySelectorAll(".scaletoggle button");
+      btns.forEach((b, i) => b.setAttribute("aria-pressed", i === splitIdx ? "true" : "false"));
+
+      const svgGroups = panelTower.querySelectorAll("svg > g");
+      // First 3 <g> are grid lines (625, 850, 1100), next 6 <g> are bars
+      for (let i = 0; i < TOWER_SPLITS.length; i++) {
+        const g = svgGroups[i + 3];
+        if (!g) continue;
+        const active = i === splitIdx;
+        const rect = g.querySelector("rect");
+        const texts = g.querySelectorAll("text");
+        if (rect) {
+          rect.setAttribute("fill", active ? "var(--moves)" : "var(--fixed)");
+          rect.setAttribute("opacity", active ? "0.92" : "0.25");
+        }
+        if (texts[0]) {
+          texts[0].setAttribute("fill", active ? "var(--moves)" : "currentColor");
+          texts[0].setAttribute("font-weight", active ? "600" : "400");
+        }
+        if (texts[1]) {
+          texts[1].setAttribute("opacity", active ? "1" : "0.65");
+        }
+      }
+
+      const dstatVals = panelTower.querySelectorAll(".dstat-v");
+      if (dstatVals[0]) dstatVals[0].textContent = "η = " + activeSplit.eta + ", κ = " + activeSplit.kappa;
+      if (dstatVals[1]) dstatVals[1].textContent = activeSplit.eta === 1 ? "2D integer box" : (2 * activeSplit.eta) + "D lattice";
+      if (dstatVals[2]) dstatVals[2].textContent = activeSplit.norm + " bits";
+      if (dstatVals[3]) dstatVals[3].textContent = splitIdx === 1 ? "0.00 bits (optimal)" : "+" + splitPenalty.toFixed(2) + " bits";
+
+      const verdict = panelTower.querySelector(".verdict");
+      if (verdict) {
+        verdict.className = "verdict " + (splitIdx === 1 ? "ok" : "no");
+        verdict.textContent = activeSplit.note;
+      }
+    }
+
+    if (panelTower) {
+      panelTower.querySelectorAll(".scaletoggle button").forEach((b, i) => {
+        b.addEventListener("click", () => { splitIdx = i; updateTower(); });
+      });
+      const svgGroups = panelTower.querySelectorAll("svg > g");
+      for (let i = 0; i < TOWER_SPLITS.length; i++) {
+        const g = svgGroups[i + 3];
+        if (g) g.addEventListener("click", () => { splitIdx = i; updateTower(); });
+      }
+    }
+
+    // 2. 5-Step Walkthrough
+    function updateSteps() {
+      if (!panelSteps) return;
+      const activeStep = TOWER_STEPS[stepIdx];
+      const stepPct = Math.max(12, Math.round((activeStep.normBits / 1380) * 100));
+      panelSteps.querySelectorAll(".step-dot").forEach((b, i) => {
+        b.setAttribute("aria-pressed", i === stepIdx ? "true" : "false");
+      });
+      const phase = panelSteps.querySelector(".step-phase");
+      const title = panelSteps.querySelector(".step-title");
+      const rows = panelSteps.querySelectorAll(".step-row .step-v");
+      if (phase) phase.textContent = activeStep.tag;
+      if (title) title.innerHTML = activeStep.titleHtml;
+      if (rows[0]) rows[0].innerHTML = activeStep.formula;
+      if (rows[1]) rows[1].innerHTML = activeStep.mechHtml;
+      if (rows[2]) {
+        const gen = rows[2].querySelector(".cost-general");
+        const spec = rows[2].querySelector(".cost-specific");
+        if (gen) gen.innerHTML = activeStep.costGen;
+        if (spec) spec.innerHTML = activeStep.costSpec;
+      }
+      const labSpans = panelSteps.querySelectorAll(".unknown-lab > span");
+      if (labSpans[1]) {
+        labSpans[1].textContent = stepIdx === 4
+          ? "625 bits + 28×–74× Markowitz matrix compression"
+          : activeStep.normBits + " bits combined norm product";
+      }
+      const fill = panelSteps.querySelector(".unknown-fill");
+      if (fill) fill.style.width = stepPct + "%";
+
+      const navBtns = panelSteps.querySelectorAll(".navbtn");
+      if (navBtns[0]) navBtns[0].disabled = stepIdx === 0;
+      if (navBtns[1]) navBtns[1].disabled = stepIdx === TOWER_STEPS.length - 1;
+      renderMath(panelSteps);
+    }
+
+    if (panelSteps) {
+      panelSteps.querySelectorAll(".step-dot").forEach((b, i) => {
+        b.addEventListener("click", () => { stepIdx = i; updateSteps(); });
+      });
+      const navBtns = panelSteps.querySelectorAll(".navbtn");
+      if (navBtns[0]) navBtns[0].addEventListener("click", () => { if (stepIdx > 0) { stepIdx--; updateSteps(); } });
+      if (navBtns[1]) navBtns[1].addEventListener("click", () => { if (stepIdx < TOWER_STEPS.length - 1) { stepIdx++; updateSteps(); } });
+    }
+
+    // 3. Bit-Security Ruler Translator
+    function updateRuler() {
+      if (!panelRuler) return;
+      const rulerModes = ["cs_fapi", "cs_g1", "abstract"];
+      panelRuler.querySelectorAll(".scaletoggle button").forEach((b, i) => {
+        b.setAttribute("aria-pressed", rulerModes[i] === ruler ? "true" : "false");
+      });
+      const missingPenalty = (chkUnits ? 3.05 : 0) + (chkFilt ? 2.15 : 0) + (chkDesc ? 2.3 : 0);
+      let rulerShift = 0;
+      let unitDesc = "1 abstract op (0.0b shift)";
+      if (ruler === "cs_fapi") {
+        rulerShift = -7.1;
+        unitDesc = "C = 20,000 inst (−7.10b shift)";
+      } else if (ruler === "cs_g1") {
+        rulerShift = -7.1 + 3.32;
+        unitDesc = "C = 2,000 inst (−3.78b shift)";
+      }
+      const bdRawInRuler = 118.0 + rulerShift;
+      const gsRawInRuler = 126.0 + rulerShift;
+      const bdScore = bdRawInRuler + missingPenalty;
+      const gsScore = gsRawInRuler + missingPenalty;
+      const csScore = 115.70 - -7.1 + rulerShift - (7.5 - missingPenalty) * 0.35;
+
+      const penStrong = panelRuler.querySelector(".check-group strong");
+      if (penStrong) penStrong.textContent = "+" + missingPenalty.toFixed(2) + " bits";
+
+      const unitVal = panelRuler.querySelector(".dstat-v");
+      if (unitVal) unitVal.textContent = unitDesc;
+
+      const models = [
+        { label: "B-D (2019) + validity costs", raw: bdRawInRuler, val: bdScore, isCs: false },
+        { label: "G-S (2021) + validity costs", raw: gsRawInRuler, val: gsScore, isCs: false },
+        { label: "CurveSmash (2026) verified", raw: csScore, val: csScore, isCs: true }
+      ];
+      const minScale = 104, maxScale = 136;
+      const barContainer = panelRuler.querySelector(".dstat > div:nth-child(2)");
+      if (barContainer) {
+        const rows = barContainer.children;
+        models.forEach((m, idx) => {
+          const row = rows[idx];
+          if (!row) return;
+          const pctVal = Math.max(6, Math.min(100, ((m.val - minScale) / (maxScale - minScale)) * 100));
+          const pctRaw = Math.max(4, Math.min(100, ((m.raw - minScale) / (maxScale - minScale)) * 100));
+          const headerSpans = row.children[0].querySelectorAll("span");
+          if (headerSpans[1]) {
+            headerSpans[1].textContent = m.val.toFixed(2) + " bits" + (!m.isCs && missingPenalty > 0 ? " (" + m.raw.toFixed(1) + "b raw + " + missingPenalty.toFixed(2) + "b)" : "");
+          }
+          const track = row.children[1];
+          if (track) {
+            track.innerHTML = "";
+            if (!m.isCs && missingPenalty > 0) {
+              const s1 = document.createElement("span");
+              s1.style.cssText = "position:absolute;left:0;top:0;bottom:0;width:" + pctVal + "%;background:var(--moves);opacity:0.25;transition:width 0.22s ease";
+              track.appendChild(s1);
+            }
+            const s2 = document.createElement("span");
+            s2.style.cssText = "position:absolute;left:0;top:0;bottom:0;width:" + (m.isCs ? pctVal : pctRaw) + "%;background:" + (m.isCs ? "var(--moves)" : (idx === 0 ? "var(--fixed)" : "var(--ink)")) + ";opacity:" + (m.isCs ? "0.95" : "0.65") + ";transition:width 0.22s ease";
+            track.appendChild(s2);
+          }
+        });
+        const footerSpans = rows[3] ? rows[3].querySelectorAll("span") : [];
+        if (footerSpans[1]) footerSpans[1].textContent = "CurveSmash vs. G-S gap: −" + (gsScore - csScore).toFixed(2) + " bits";
+      }
+
+      const verdict = panelRuler.querySelector(".verdict");
+      if (verdict) {
+        verdict.textContent = missingPenalty === 7.5
+          ? "With all real-world mathematical costs included, G-S's box sieve requires " + gsScore.toFixed(2) + " bits in this ruler, while CurveSmash's algorithmic breakthroughs reduce the cost by " + (gsScore - csScore).toFixed(2) + " bits to " + csScore.toFixed(2) + " bits."
+          : "Unchecking validity costs shows how raw ruler conversion alone shifts G-S to " + gsScore.toFixed(2) + " bits (" + missingPenalty.toFixed(2) + "b of +7.50b real-world corrections applied).";
+      }
+    }
+
+    if (panelRuler) {
+      const rulerModes = ["cs_fapi", "cs_g1", "abstract"];
+      panelRuler.querySelectorAll(".scaletoggle button").forEach((b, i) => {
+        b.addEventListener("click", () => { ruler = rulerModes[i]; updateRuler(); });
+      });
+      const checks = panelRuler.querySelectorAll("input[type=checkbox]");
+      if (checks[0]) checks[0].addEventListener("change", (e) => { chkUnits = e.target.checked; updateRuler(); });
+      if (checks[1]) checks[1].addEventListener("change", (e) => { chkFilt = e.target.checked; updateRuler(); });
+      if (checks[2]) checks[2].addEventListener("change", (e) => { chkDesc = e.target.checked; updateRuler(); });
+    }
+
+    // 4. Milestone Ladder
+    function fmtScore(v) { return v === 121.999 ? "121.999" : v.toFixed(2); }
+    function getBarPct(score) {
+      const worstScore = MILESTONE_STAGES[0].score;
+      const bestScore = MILESTONE_STAGES[MILESTONE_STAGES.length - 1].score;
+      if (zoomLadder) {
+        const hi = 123.61;
+        if (score > hi) return null;
+        return Math.max(4, Math.min(100, ((hi - score) / (hi - bestScore)) * 100));
+      }
+      return Math.max(4, Math.min(100, ((worstScore - score) / (worstScore - bestScore)) * 100));
+    }
+
+    function updateLadder() {
+      if (!panelLadder) return;
+      const toggleBtns = panelLadder.querySelectorAll(".scaletoggle button");
+      if (toggleBtns[0]) toggleBtns[0].setAttribute("aria-pressed", !zoomLadder ? "true" : "false");
+      if (toggleBtns[1]) toggleBtns[1].setAttribute("aria-pressed", zoomLadder ? "true" : "false");
+
+      const rungs = panelLadder.querySelectorAll(".rung");
+      rungs.forEach((btn, i) => {
+        const s = MILESTONE_STAGES[i];
+        btn.setAttribute("aria-pressed", i === selectedRung ? "true" : "false");
+        const track = btn.querySelector(".track");
+        if (!track) return;
+        const pct = getBarPct(s.score);
+        const isBaselineRow = (!zoomLadder && i === 0) || (zoomLadder && i === 2);
+        if (pct === null) {
+          track.innerHTML = "<span class=\"offscale\">pre-CurveSmash →</span>";
+        } else if (isBaselineRow) {
+          track.innerHTML = "<span class=\"baseline-label\">" + (zoomLadder ? "CS baseline (123.61 bits · 0 bits saved)" : "corrected box baseline (126.40 bits)") + "</span>";
+        } else {
+          track.innerHTML = "<span class=\"bar" + (s.projected ? " is-projected" : "") + "\" style=\"width:" + pct + "%\"></span>";
+        }
+      });
+
+      const activeStage = MILESTONE_STAGES[selectedRung];
+      const readout = panelLadder.querySelector(".readout");
+      if (readout) {
+        const byline = readout.querySelector(".byline");
+        if (byline) byline.innerHTML = "<span class=\"who\">" + activeStage.by + "</span> — " + activeStage.year;
+        const terms = readout.querySelectorAll(".term");
+        if (terms[0]) {
+          terms[0].querySelector(".term-val").textContent = activeStage.steps;
+          terms[0].querySelector(".term-sub").textContent = activeStage.stepsSub;
+        }
+        if (terms[1]) {
+          terms[1].querySelector(".term-val").textContent = activeStage.cost;
+          terms[1].querySelector(".term-sub").textContent = activeStage.costSub;
+        }
+        if (terms[2]) {
+          terms[2].querySelector(".term-val").innerHTML = "2<sup>" + fmtScore(activeStage.score) + "</sup>";
+          terms[2].querySelector(".term-sub").textContent = activeStage.projected ? "literature / reference" : "CurveSmash C=20,000 units";
+        }
+        const what = readout.querySelector(".detail-what");
+        if (what) what.innerHTML = activeStage.whatHtml;
+        let deltaEl = readout.querySelector(".delta");
+        if (activeStage.delta) {
+          if (!deltaEl) {
+            deltaEl = document.createElement("span");
+            deltaEl.className = "delta";
+            readout.appendChild(deltaEl);
+          }
+          deltaEl.textContent = activeStage.delta;
+        } else if (deltaEl) {
+          deltaEl.remove();
+        }
+      }
+    }
+
+    if (panelLadder) {
+      const toggleBtns = panelLadder.querySelectorAll(".scaletoggle button");
+      if (toggleBtns[0]) toggleBtns[0].addEventListener("click", () => { zoomLadder = false; updateLadder(); });
+      if (toggleBtns[1]) toggleBtns[1].addEventListener("click", () => { zoomLadder = true; updateLadder(); });
+      panelLadder.querySelectorAll(".rung").forEach((btn, i) => {
+        btn.addEventListener("click", () => { selectedRung = i; updateLadder(); });
+      });
+    }
+  });
+})();
+    </script>
+  </body>
+</html>

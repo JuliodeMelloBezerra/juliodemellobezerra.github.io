@@ -96,6 +96,13 @@ export const SITE_CONTENT = {
 
   articles: [
     {
+      slug: 'STNFS-part1',
+      title: 'Smashing the Tower Number Field Sieve',
+      category: 'cryptography',
+      href: './articles/stnfs-part1/Smashing_The_Tower_BLS12_381_Part1.html',
+      external: false
+    },
+    {
       slug: 'strong-pseudoprimes',
       title: 'Constructing Strong Pseudoprimes',
       category: 'cryptography',
