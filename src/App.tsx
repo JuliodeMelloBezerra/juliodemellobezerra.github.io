@@ -340,7 +340,7 @@ export default function App() {
 
                 <div className="space-y-4 text-[15px] leading-relaxed text-neutral-700 dark:text-neutral-300">
                   <p>
-                    I am a number theorist by training, venturing into the world of cryptography. I spend my time studying practical implementations of encryption schemes and exploring how number-theoretic methods can either break or optimize them. Currently, I serve as an elliptic curve cryptanalysis judge for the{' '}
+                    I am a mathematician by training (number theory), venturing into the world of cryptography. I spend my time studying practical implementations of encryption schemes and exploring how number-theoretic methods can either break or optimize them. Currently, I serve as a cryptanalysis judge for the elliptic curve{' '}
                     <a
                       href={profile.curveSmashUrl}
                       target="_blank"
