@@ -1,0 +1,2 @@
+Just include <script src="../article-nav.js"></script> in <head> , right before </head>,
+for any future article HTML.
