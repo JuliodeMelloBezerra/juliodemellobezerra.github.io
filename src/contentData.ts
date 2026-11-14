@@ -127,157 +127,185 @@ export const SITE_CONTENT = {
     // the General subsection will automatically appear on the home page.
   ] as ArticleItem[],
 
-  cvs: {
-    professional: {
-      id: 'professional',
-      label: 'Professional CV',
-      pdfPath: './assets/CV.pdf',
-      downloadFilename: 'Julio_de_Mello_Bezerra_CV.pdf',
-      header: {
-        name: 'Julio de Mello Bezerra',
-        title: 'Mathematics PhD | Cryptography & Cryptanalysis',
-        location: 'Regensburg, Germany'
-      },
-      sections: [
-        {
-          type: 'paragraph',
-          title: 'Profile',
-          content:
-            'PhD Mathematician transitioning from pure mathematics into applied cryptography, bringing a strong theoretical foundation in classical and post-quantum encryption. Proven ability to translate advanced mathematical literature into functional code, with practical experience implementing attacks and algorithms in Python and SageMath. Track record of analytical problem-solving, evidenced by academic history, cryptographic research projects and CTF challenges.'
-        },
-        {
-          type: 'key-value-list',
-          title: 'Language Skills',
-          items: [
+    cvs: {
+        professional: {
+          id: 'professional',
+          label: 'Professional CV',
+          pdfPath: './assets/CV.pdf',
+          downloadFilename: 'Julio_de_Mello_Bezerra_CV.pdf',
+          header: {
+            name: 'Julio de Mello Bezerra',
+            title: 'Mathematics PhD | Cryptography & Cryptanalysis',
+            location: 'Regensburg, Germany'
+          },
+          sections: [
             {
-              label: 'Languages',
-              value:
-                'English (Fluent), Portuguese (Native), German (Working Proficiency), Spanish (Basic Proficiency)'
+              type: 'paragraph',
+              title: 'Profile',
+              content:
+                'PhD mathematician specializing in number theory and arithmetic geometry, with a broad theoretical command of classical and post-quantum cryptography. Experienced in analyzing cryptographic constructions and cryptanalytic techniques, independently validating mathematical arguments, identifying algorithmic improvements and potential security weaknesses, and turning research literature into computational experiments using Python and SageMath. Particularly adept at rapidly mastering new technical domains and translating complex theoretical concepts into actionable security analysis for real-world cryptographic systems and protocols.'
             },
             {
-              label: 'Programming',
-              value: 'Python, SageMath, LaTeX'
-            }
-          ]
-        },
-        {
-          type: 'entries',
-          title: 'Cryptographic Research & Projects',
-          entries: [
-            {
-              organization: 'Yukon CurveSmash Project (yukon.org/curvesmash)',
-              role: 'Judge & Cryptanalysis Researcher',
-              period: '2026 – Present',
-              location: 'Remote',
-              bullets: [
+              type: 'key-value-list',
+              title: 'Skills & Languages',
+              items: [
                 {
-                  text: 'Evaluated and advanced state-of-the-art elliptic curve cryptanalysis in a project combining modern AI capabilities with human mathematical expertise, resulting in a co-authored article (Beyond the Cheon-Kozaki-Kutsuma-Matsuo attack) analyzing improved attack parameters.'
+                  label: 'Cryptographic Focus',
+                  value:
+                    'Elliptic-curve & pairing-based cryptography, zkSNARKs, cryptanalysis, primality testing and number-field sieve algorithms.'
                 },
                 {
-                  text: 'Investigating pairing inversion security on modern pairing-friendly curves, with an upcoming technical article in preparation, by applying the Special Tower Number Field Sieve (STNFS) attack to BLS12-381.'
+                  label: 'Additional Knowledge',
+                  value:
+                    'RSA and AES, lattice-based and isogeny-based post-quantum cryptography.'
+                },
+                {
+                  label: 'Programming & Tools',
+                  value: 'Python, SageMath, LaTeX, basic familiarity with Linux & Git.'
+                },
+                {
+                  label: 'Languages',
+                  value:
+                    'English (Fluent), German (Working Proficiency – University teaching experience), Portuguese (Native), Spanish (Basic Proficiency)'
                 }
               ]
             },
             {
-              organization: 'Applied & Theoretical Cryptography',
-              role: 'Projects & Study',
-              period: '2026',
-              location: 'Independent',
-              bullets: [
+              type: 'entries',
+              title: 'Cryptographic Research & Projects',
+              entries: [
                 {
-                  label: 'Algorithm Implementation',
-                  text: 'Authored a technical article and Python/SageMath implementation demonstrating how to construct strong pseudoprimes that bypass primality tests, by translating classical cryptography papers into optimized executable code.'
+                  organization:
+                    'Yukon CurveSmash Autoresearch Project (<a href="https://www.yukon.org/curvesmash#curvesmash-judges" target="_blank" rel="noopener noreferrer">yukon.org/curvesmash</a>)',
+                  role: 'Judge & Cryptanalysis Researcher',
+                  period: '2026 – Present',
+                  location: 'Remote',
+                  bullets: [
+                    {
+                      label: 'Multi-Curve Cryptanalysis',
+                      text: 'Independently evaluated and mathematically verified AI-assisted cryptanalytic approaches against widely used elliptic curves (BLS12-381, BN254, secp256k1 & secp256r1). Compared proposed attacks against existing literature, audited attack strategies and identified improved parameters.'
+                    },
+                    {
+                      label:
+                        'Security of Pairing-Friendly Curves (<a href="https://juliodemellobezerra.github.io/articles/stnfs/index.html" target="_blank" rel="noopener noreferrer">Article</a>)',
+                      text: 'Authored an interactive technical analysis of the SexTNFS attack, comparing CurveSmash\'s advancements with the existing state of the art in the literature. Refined attack-cost estimates and reduced the expected security of pairing-friendly curves, specifically BLS12-381 & BN254.'
+                    },
+                    {
+                      label:
+                        'zkSNARK Setup Security (<a href="https://yelhousni.github.io/beyond-kkm/" target="_blank" rel="noopener noreferrer">Article</a>)',
+                      text: 'Co-authored Beyond the Cheon-Kozaki-Kutsuma-Matsuo attack, analyzing the algebraic and algorithmic ideas behind new discrete-logarithm speedups that exploit "powers-of-tau" auxiliary inputs, often used in KZG commitment schemes.'
+                    }
+                  ]
                 },
                 {
-                  label: 'CTF Challenges',
-                  text: 'Solved a wide range of Capture-the-Flag challenges on cryptohack.org (reaching the top 1% of users) by implementing practical attacks across most standard symmetric and asymmetric schemes.'
-                },
-                {
-                  label: 'Post-Quantum',
-                  text: 'Studied general post-quantum protocols and isogeny-based hardness assumptions as a participant in the QuSoft reading group on Quantum Algorithms for Isogenies (Spring 2021).'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          type: 'entries',
-          title: 'Professional Experience',
-          entries: [
-            {
-              organization: 'University of Regensburg',
-              role: 'PhD Researcher & Lecturer',
-              period: 'Oct 2020 – Jul 2026',
-              location: 'Regensburg, Germany',
-              bullets: [
-                {
-                  label: 'Research',
-                  text: 'Conducted independent research in number theory and arithmetic geometry resulting in a magna cum laude doctoral thesis and a preprint, alongside collaborative research in advanced research seminars (Oberseminare).'
-                },
-                {
-                  label: 'Teaching',
-                  text: 'Extensive teaching experience across 8 semesters in both English and German, in general undergraduate math courses as well as advanced seminars in cryptography-relevant topics such as Elliptic Curves and Lattices.'
-                },
-                {
-                  label: 'Conferences',
-                  text: 'Co-organized a workshop on Eisenstein series and equivariant cohomology, delivered research talks in Germany, France, and the UK, and participated in multiple conferences across Europe.'
-                }
-              ]
-            }
-          ]
-        },
-        {
-          type: 'entries',
-          title: 'Education',
-          entries: [
-            {
-              organization: 'University of Regensburg',
-              role: 'Doktor der Naturwissenschaften (PhD in Mathematics) – magna cum laude',
-              period: 'Apr 2026',
-              location: 'Regensburg, Germany',
-              bullets: [
-                {
-                  label: 'Thesis',
-                  text: 'Shintani cocycle decomposition of topological polylogarithms'
+                  organization: 'Applied & Theoretical Cryptography',
+                  role: 'Projects & Study',
+                  period: '2026',
+                  location: 'Independent',
+                  bullets: [
+                    {
+                      label:
+                        'From Research Papers to Optimized Code (<a href="https://juliodemellobezerra.github.io/articles/strong-pseudoprimes/index.html" target="_blank" rel="noopener noreferrer">Article</a> & <a href="https://github.com/JuliodeMelloBezerra/Strong-Pseudoprimes" target="_blank" rel="noopener noreferrer">Code</a>)',
+                      text: 'Authored an interactive article and Python/SageMath implementation on adversarial primality testing (forging composites that fool naive Miller-Rabin prime checks), translating research papers into optimized executable code and achieving orders-of-magnitude speedups via single-pass CRT alignment, segmented sieving and quadratic reciprocity.'
+                    },
+                    {
+                      label: 'CTF Challenges',
+                      text: 'Solved over 70 Capture-the-Flag challenges on <a href="https://cryptohack.org/user/WertherSamsa/" target="_blank" rel="noopener noreferrer">cryptohack.org</a> (<a href="https://cryptohack.org/user/WertherSamsa/" target="_blank" rel="noopener noreferrer">reaching the top 1% of users</a>) by implementing practical attacks in Python and SageMath across most standard symmetric and asymmetric schemes, such as AES in various modes, RSA, Diffie-Hellman, ECC and more.'
+                    },
+                    {
+                      label: 'Post-Quantum Cryptography',
+                      text: 'Studied quantum cryptanalytic algorithms and isogeny-based protocols as a participant in the QuSoft reading group on Quantum Algorithms for Isogenies (Spring 2021), as well as the subsequent higher-dimensional attack on SIDH. Studied lattice-based post-quantum cryptography through ML-KEM (CRYSTALS-Kyber), including its role in hybrid key-exchange protocols in TLS 1.3.'
+                    }
+                  ]
                 }
               ]
             },
             {
-              organization: 'University of Regensburg & Leiden University',
-              role: 'ALGANT Master in Mathematics',
-              period: 'Aug 2020',
-              location: 'Germany & Netherlands',
-              bullets: [
+              type: 'entries',
+              title: 'Professional Experience',
+              entries: [
                 {
-                  text: 'Scholarship recipient in joint international master’s programme focused on algebra, geometry, and number theory.'
+                  organization: 'University of Regensburg',
+                  role: 'Doctoral Researcher & Lecturer',
+                  period: 'Oct 2020 – Jul 2026',
+                  location: 'Regensburg, Germany',
+                  bullets: [
+                    {
+                      label: 'Research',
+                      text: 'Conducted independent research in number theory and arithmetic geometry resulting in a magna cum laude doctoral thesis, alongside collaborative research in advanced departmental seminars (Oberseminare).'
+                    },
+                    {
+                      label: 'Teaching',
+                      text: 'Instructed undergraduate and graduate courses across 8 semesters in English and German, covering general mathematics as well as advanced seminars in cryptography-relevant topics including Elliptic Curves and Lattices.'
+                    },
+                    {
+                      label: 'Conferences',
+                      text: 'Co-organized <a href="https://sfb-higher-invariants.app.uni-regensburg.de/index.php/Eisenstein2021" target="_blank" rel="noopener noreferrer">a workshop on Eisenstein series and equivariant cohomology</a>, delivered research talks in Germany, France, and the UK, and participated in multiple international conferences across Europe.'
+                    }
+                  ]
                 }
               ]
             },
             {
-              organization: 'Universidade Federal do Rio de Janeiro (UFRJ)',
-              role: 'Bachelor in Pure Mathematics',
-              period: 'Jan 2018',
-              location: 'Rio de Janeiro, Brazil',
-              bullets: []
-            }
-          ]
-        },
-        {
-          type: 'bullet-list',
-          title: 'Selected Publications & Awards',
-          items: [
-            {
-              label: 'Mathematics Preprint',
-              text: 'J. de Mello Bezerra, “Shintani cocycle decomposition of topological polylogarithms,” arXiv:2610.32363 (2026).'
+              type: 'entries',
+              title: 'Education',
+              entries: [
+                {
+                  organization: 'University of Regensburg',
+                  role: 'Doktor der Naturwissenschaften (PhD in Mathematics) – magna cum laude',
+                  period: 'Apr 2026',
+                  location: 'Regensburg, Germany',
+                  bullets: [
+                    {
+                      label: 'Thesis',
+                      text: 'Shintani cocycle decomposition of topological polylogarithms'
+                    }
+                  ]
+                },
+                {
+                  organization: 'University of Regensburg & Leiden University',
+                  role: 'ALGANT Master in Mathematics (Scholarship Recipient)',
+                  period: 'Aug 2020',
+                  location: 'Germany & Netherlands',
+                  bullets: []
+                },
+                {
+                  organization: 'Universidade Federal do Rio de Janeiro (UFRJ)',
+                  role: 'Bachelor in Pure Mathematics',
+                  period: 'Jan 2018',
+                  location: 'Rio de Janeiro, Brazil',
+                  bullets: []
+                }
+              ]
             },
             {
-              label: 'Award',
-              text: 'Silver Medal (30th out of 9,531 participants), Brazilian Computer Science Olympics (2010).'
+              type: 'bullet-list',
+              title: 'Selected Technical Writing and Accomplishments',
+              items: [
+                {
+                  label: 'Cryptanalysis Article',
+                  text: 'J. de Mello Bezerra and Y. El Housni, “Smashing the Tower Number Field Sieve — BLS12-381 (Part 1),” <a href="https://juliodemellobezerra.github.io/articles/stnfs/index.html" target="_blank" rel="noopener noreferrer">juliodemellobezerra.github.io</a> (2026).'
+                },
+                {
+                  label: 'Cryptanalysis Article',
+                  text: 'Y. El Housni and J. de Mello Bezerra, “Beyond the Cheon-Kozaki-Kutsuma-Matsuo attack,” <a href="https://yelhousni.github.io/beyond-kkm/" target="_blank" rel="noopener noreferrer">yelhousni.github.io/beyond-kkm</a> (2026).'
+                },
+                {
+                  label: 'Technical Article',
+                  text: 'J. de Mello Bezerra, “Constructing Strong Pseudoprimes,” <a href="https://juliodemellobezerra.github.io/articles/strong-pseudoprimes/index.html" target="_blank" rel="noopener noreferrer">juliodemellobezerra.github.io</a> (2026).'
+                },
+                {
+                  label: 'Mathematics Preprint',
+                  text: 'J. de Mello Bezerra, “Shintani cocycle decomposition of topological polylogarithms,” <a href="https://arxiv.org/abs/2610.32363" target="_blank" rel="noopener noreferrer">arXiv:2610.32363</a> (2026).'
+                },
+                {
+                  label: 'Award',
+                  text: 'Silver Medal (30th out of 9,531 participants), Brazilian Computer Science Olympics (2010).'
+                }
+              ]
             }
           ]
-        }
-      ]
-    } as CvData,
+        } as CvData,
 
     academic: {
       id: 'academic',
