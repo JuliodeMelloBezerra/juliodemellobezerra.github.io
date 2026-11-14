@@ -130,7 +130,7 @@ export default function App() {
   const { profile, articles, cvs } = SITE_CONTENT;
   const currentCv: CvData =
     activeCvTab === 'professional' ? cvs.professional : cvs.academic;
-    
+
   const renderTextWithLinks = (text: string): React.ReactNode => {
     const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
     const parts: React.ReactNode[] = [];
@@ -162,7 +162,7 @@ export default function App() {
     return parts.length > 0 ? parts : text;
   };
 
-  const renderCvSection = (section: CvSection) => {
+ const renderCvSection = (section: CvSection) => {
     switch (section.type) {
       case 'paragraph':
         return (
@@ -171,7 +171,7 @@ export default function App() {
               {section.title}
             </h3>
             <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
-              {section.content}
+              {renderTextWithLinks(section.content)}
             </p>
           </section>
         );
@@ -189,7 +189,7 @@ export default function App() {
                     {item.label}:{' '}
                   </span>
                   <span className="text-neutral-700 dark:text-neutral-300">
-                    {item.value}
+                    {renderTextWithLinks(item.value)}
                   </span>
                 </div>
               ))}
@@ -211,7 +211,7 @@ export default function App() {
                 >
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                      {entry.organization}
+                      {renderTextWithLinks(entry.organization)}
                     </h4>
                     <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400 tabular-nums">
                       {entry.period}
@@ -227,10 +227,10 @@ export default function App() {
                         <li key={idx}>
                           {bullet.label && (
                             <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                              {bullet.label}:{' '}
+                              {renderTextWithLinks(bullet.label)}:{' '}
                             </span>
                           )}
-                          <span>{bullet.text}</span>
+                          <span>{renderTextWithLinks(bullet.text)}</span>
                         </li>
                       ))}
                     </ul>
@@ -252,10 +252,10 @@ export default function App() {
                 <li key={idx}>
                   {item.label && (
                     <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                      {item.label}{' '}
+                      {renderTextWithLinks(item.label)}{' '}
                     </span>
                   )}
-                  <span>{item.text}</span>
+                  <span>{renderTextWithLinks(item.text)}</span>
                 </li>
               ))}
             </ul>
