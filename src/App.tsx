@@ -130,6 +130,37 @@ export default function App() {
   const { profile, articles, cvs } = SITE_CONTENT;
   const currentCv: CvData =
     activeCvTab === 'professional' ? cvs.professional : cvs.academic;
+    
+  const renderTextWithLinks = (text: string): React.ReactNode => {
+    const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = linkRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(text.slice(lastIndex, match.index));
+      }
+      parts.push(
+        <a
+          key={match.index}
+          href={match[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-neutral-900 dark:text-neutral-100 underline decoration-neutral-400 dark:decoration-neutral-600 hover:decoration-neutral-900 dark:hover:decoration-neutral-100 underline-offset-4 transition-colors"
+        >
+          {match[1]}
+        </a>
+      );
+      lastIndex = linkRegex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      parts.push(text.slice(lastIndex));
+    }
+
+    return parts.length > 0 ? parts : text;
+  };
 
   const renderCvSection = (section: CvSection) => {
     switch (section.type) {
