@@ -16,18 +16,35 @@
   document.addEventListener('DOMContentLoaded', function () {
     var nav = document.querySelector('.top-nav');
 
-    // 2. Check if a back button already exists
-    var existingBackLink = document.querySelector('a[href="../../"]') || document.querySelector('a[href="./"]') || document.getElementById('nav-back-home');
+    // 2. Check if a back link already exists (e.g., in strong-pseudoprimes)
+    var existingBackLink =
+      document.querySelector('a[href="../../"]') ||
+      document.querySelector('a[href="./"]') ||
+      document.getElementById('nav-back-home');
 
-    // If no back link exists and there is a top navbar, inject one
     if (nav && !existingBackLink) {
-      var backBtn = document.createElement('a');
-      backBtn.id = 'nav-back-home';
-      backBtn.href = '../../';
-      backBtn.className = 'btn-action';
-      backBtn.style.textDecoration = 'none';
-      backBtn.innerHTML = '← Home';
-      nav.insertBefore(backBtn, nav.firstChild);
+      var backLink = document.createElement('a');
+      backLink.id = 'nav-back-home';
+      backLink.href = '../../';
+      backLink.style.color = 'var(--ink-dim)';
+      backLink.style.textDecoration = 'none';
+      backLink.style.transition = 'color 0.15s ease';
+      backLink.innerHTML = '&larr; Julio de Mello Bezerra';
+
+      backLink.addEventListener('mouseenter', function () {
+        backLink.style.color = 'var(--ink)';
+      });
+      backLink.addEventListener('mouseleave', function () {
+        backLink.style.color = 'var(--ink-dim)';
+      });
+
+      // Replace the article series title if present; otherwise insert at the start
+      var brand = nav.querySelector('.top-nav-brand');
+      if (brand) {
+        nav.replaceChild(backLink, brand);
+      } else {
+        nav.insertBefore(backLink, nav.firstChild);
+      }
     }
 
     // 3. Support either button ID: #theme-toggle-btn or #theme-toggle
